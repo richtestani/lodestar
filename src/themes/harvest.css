@@ -1,0 +1,26 @@
+/* HARVEST — food / restaurant / cafe. Warm, appetizing, hand-made feel.
+   Characterful serif (Fraunces) keeps it off the generic Playfair default.
+   Fonts: Fraunces (display+accent), Karla (body). */
+:root {
+  --bg:         #fbf6ee;
+  --surface:    #ffffff;
+  --surface-2:  #2a2018;
+  --text:       #2a2018;
+  --text-muted: #6f6052;
+  --primary:    #b4451f;
+  --primary-2:  #8f3315;
+  --on-primary: #fbf6ee;
+  --border:     #ece2d4;
+
+  --font-display: 'Fraunces', serif;
+  --font-body:    'Karla', sans-serif;
+  --font-accent:  'Fraunces', serif;
+  --font-mono:    'Karla', sans-serif;
+
+  --radius:      8px;
+  --maxw:        1120px;
+  --nav-height:  74px;
+  --section-pad: clamp(4rem, 9vw, 7rem);
+  --shadow:      0 4px 18px rgba(80,50,20,0.08);
+  --shadow-lg:   0 18px 44px rgba(80,50,20,0.16);
+}

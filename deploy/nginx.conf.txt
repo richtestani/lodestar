@@ -1,0 +1,5 @@
+# Forge / Vultr (Nginx) history-mode routing.
+# Add inside the server block:
+location / {
+    try_files $uri $uri/ /index.html;
+}

@@ -1,0 +1,28 @@
+/* NORTH — the Lodestar default. Simple and modular.
+   A single grotesk family does display + body; a monospace handles the
+   small structural labels (eyebrows), which is where the "modular/system"
+   character comes from. Cool paper-white base, one confident cobalt accent.
+   Fonts: Hanken Grotesk (display/body/accent), Space Mono (labels). */
+:root {
+  --bg:         #f6f7f9;
+  --surface:    #ffffff;
+  --surface-2:  #14161c;
+  --text:       #17191f;
+  --text-muted: #5a6068;
+  --primary:    #2e3bd0;
+  --primary-2:  #1f2aa6;
+  --on-primary: #ffffff;
+  --border:     #e5e7ec;
+
+  --font-display: 'Hanken Grotesk', sans-serif;
+  --font-body:    'Hanken Grotesk', sans-serif;
+  --font-accent:  'Hanken Grotesk', sans-serif;
+  --font-mono:    'Space Mono', ui-monospace, monospace;
+
+  --radius:      6px;
+  --maxw:        1140px;
+  --nav-height:  74px;
+  --section-pad: clamp(4rem, 9vw, 7rem);
+  --shadow:      0 1px 2px rgba(20,22,28,0.04), 0 4px 16px rgba(20,22,28,0.05);
+  --shadow-lg:   0 12px 36px rgba(20,22,28,0.12);
+}

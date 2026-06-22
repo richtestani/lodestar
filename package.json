@@ -1,0 +1,22 @@
+{
+  "name": "lodestar-starter",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A reusable Vue 3 + Vite client-site starter. Run `node setup.mjs` to stamp out a new site.",
+  "scripts": {
+    "new": "node setup.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.34",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.6",
+    "vite": "^8.0.12",
+    "vite-svg-loader": "^5.1.1"
+  }
+}

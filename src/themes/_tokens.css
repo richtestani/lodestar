@@ -1,0 +1,11 @@
+/* ============================================================
+   THEME TOKEN CONTRACT
+   Every theme file must define ALL of these on :root.
+   base.css and every module read ONLY from these tokens, so a
+   theme never touches component code — it just redefines values.
+
+   COLOR  --bg --surface --surface-2 --text --text-muted
+          --primary --primary-2 --on-primary --border
+   TYPE   --font-display --font-body --font-accent --font-mono
+   FORM   --radius --maxw --nav-height --section-pad --shadow --shadow-lg
+   ============================================================ */

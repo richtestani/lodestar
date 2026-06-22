@@ -1,0 +1,10 @@
+# SPA history-mode routing for Apache / Bluehost.
+# Copy this into the web root (alongside index.html) when deploying.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
