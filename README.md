@@ -73,6 +73,12 @@ Drop-in home sections in `src/modules/`, wired up in `registry.js`:
 Add your own: build a `*.vue` that reads props, register it in `registry.js`,
 reference it in `homeSections`.
 
+Two modules ship with layout **variants**, set per-instance via a `variant`
+prop in the section's `props`:
+
+- **hero** — `center` (default) · `split` · `minimal` · `overlay` · `panel`
+- **gallery** — `grid` (default) · `masonry` · `carousel` · `mosaic`
+
 ## Images
 
 Put files in `src/assets/images/` and reference them by filename in the config

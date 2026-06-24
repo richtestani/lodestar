@@ -67,7 +67,7 @@ export const site = {
   homeSections: [
 
     { module: 'hero', props: {
-        variant:  'center',      // center | split
+        variant:  'center',      // center | split | minimal | overlay | panel
         eyebrow:  'Dovetail & Co.',
         title:    'Considered goods for everyday rituals.',
         subtitle: 'Small-batch homewares, made by hand and built to last.',
@@ -97,6 +97,7 @@ export const site = {
     }},
 
     { module: 'gallery', props: {
+        variant: 'grid',         // grid | masonry | carousel | mosaic
         eyebrow: 'The Collection',
         title:   'A look at recent work',
         images: [
