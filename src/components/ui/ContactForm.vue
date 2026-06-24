@@ -14,6 +14,13 @@
           <label for="cf-message">Message</label>
           <textarea id="cf-message" v-model="form.message" rows="5" placeholder="How can we help?" required></textarea>
         </div>
+
+        <!-- Honeypot: hidden from people, irresistible to bots. If it's filled,
+             the submit is silently dropped. Formspree also auto-discards on _gotcha. -->
+        <input
+          v-model="honeypot" type="text" name="_gotcha"
+          class="cf-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
         <p v-if="error" class="cf-error">{{ error }}</p>
         <button type="submit" class="btn cf-submit" :disabled="sending">{{ sending ? 'Sending…' : 'Send message' }}</button>
         <p v-if="!endpoint" class="cf-hint">Add your Formspree endpoint in <code>site.config.js</code> → <code>contact.formspree</code> to enable sending.</p>
@@ -37,17 +44,20 @@ const endpoint  = site.contact.formspree
 const submitted = ref(false)
 const sending   = ref(false)
 const error     = ref('')
+const honeypot  = ref('')
 const form = reactive({ name: '', email: '', message: '' })
 
 async function handleSubmit() {
   error.value = ''
+  // Bot trap: a real user never fills this. Fake success so the bot moves on.
+  if (honeypot.value) { submitted.value = true; return }
   if (!endpoint) { error.value = 'No form endpoint configured yet.'; return }
   sending.value = true
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ ...form }),
+      body: JSON.stringify({ ...form, _gotcha: honeypot.value }),
     })
     if (res.ok) submitted.value = true
     else {
@@ -79,4 +89,7 @@ async function handleSubmit() {
 .cf-hint code { background: var(--surface); padding: 1px 5px; border-radius: 4px; }
 .cf-done { text-align: center; padding: 2rem 0; }
 .cf-done .h-sub { margin: 0.6rem 0; }
+
+/* Honeypot — kept in the layout but off-screen (display:none gets skipped by some bots). */
+.cf-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 </style>

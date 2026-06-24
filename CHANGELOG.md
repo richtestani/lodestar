@@ -19,6 +19,15 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 All variants are pure CSS (no new dependencies) and documented in the README
 and the reference `site.config.js`.
 
+### Security
+- **Hardened deploy configs** — `deploy/.htaccess` and `deploy/nginx.conf.txt`
+  now force HTTPS and set security headers: a Content-Security-Policy tuned to
+  exactly what the template loads (self-hosted JS/CSS, Google Fonts, the Maps
+  embed, the Formspree POST), HSTS, `X-Content-Type-Options`, `Referrer-Policy`,
+  frame protection, and a restrictive `Permissions-Policy`.
+- **Contact-form honeypot** — `ui/ContactForm.vue` adds an off-screen `_gotcha`
+  field; filled submissions are silently dropped client-side and by Formspree.
+
 ## [0.1.0] — 2026-06-23
 
 First working version: a reusable Vue 3 + Vite starter that scaffolds a new
