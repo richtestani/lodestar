@@ -42,6 +42,25 @@ homeSections: [
 
 Reorder, remove, or duplicate entries freely. Unknown module names warn in dev.
 
+## Pages
+
+Each entry in `pages` picks a `view`:
+
+- **`home`** — the home page; renders `homeSections`.
+- **`page`** — a prose page (`content: { eyebrow, title, body: [...], cta }`).
+- **`contact`** — the contact form.
+- **`sections`** — a page built from modules, just like the home page. Give it a
+  `sections: [...]` array. This is how you make, say, a standalone menu page:
+
+```js
+{ slug: 'menu', name: 'Menu', view: 'sections', sections: [
+  { module: 'menu', props: { /* … */ } },
+  { module: 'cta',  props: { /* … */ } },
+]}
+```
+
+Nav links are derived from `pages`, so adding a page adds it to the nav.
+
 ## Themes
 
 Four token-based base styles. A theme is just a set of CSS variables in
@@ -108,7 +127,8 @@ src/
   themes/                  base.css + _tokens.css + 4 themes + active.css
   modules/                 swappable home sections + registry.js
   components/              AppNav, AppFooter, ui/ContactForm
-  views/                   HomeView (renderer), PageView, ContactView
+  views/                   HomeView, PageView, ContactView, ModuleView
+  components/SectionRenderer.vue  renders a list of modules (home + module pages)
   composables/useAssets.js image resolver
 deploy/                    .htaccess + nginx snippet
 ```

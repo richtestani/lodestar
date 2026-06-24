@@ -8,6 +8,13 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **`sections` page type** — pages can now be built from an ordered list of
+  modules (like the home page), not just prose. Set `view: 'sections'` and a
+  `sections: [...]` array on a page — e.g. a standalone menu page. Backed by a
+  new `ModuleView` and a shared `SectionRenderer` component that the home page
+  now also uses.
+
+### Added
 - **Hero layout variants** — `minimal` (text-only), `overlay` (copy on a
   full-bleed image), and `panel` (floating copy card over a contained image),
   alongside the existing `center` and `split`. Set per-instance via the hero

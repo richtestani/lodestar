@@ -44,7 +44,11 @@ export const site = {
   },
 
   // ── PAGES (drives the router) ───────────────────────────
-  // view: 'home' | 'contact' | 'page'
+  // view: 'home' | 'page' | 'contact' | 'sections'
+  //   'page'     → prose: { eyebrow, title, body: [...], cta }
+  //   'sections' → a list of modules, e.g. a standalone menu page:
+  //                { slug:'menu', name:'Menu', view:'sections',
+  //                  sections:[ { module:'menu', props:{...} } ] }
   pages: [
     { slug: '',        name: 'Home',    view: 'home' },
     { slug: 'about',   name: 'About',   view: 'page', content: {
