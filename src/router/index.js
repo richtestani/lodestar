@@ -7,9 +7,13 @@
 //   'sections' → ModuleView (an ordered list of modules, e.g. a menu page)
 // History mode needs the .htaccess (Apache) or Nginx try_files
 // rule from /deploy when you go live.
+// Also applies each page's title/meta/OG tags on navigation — see
+// composables/useSeo.js and the `seo` field on each page in
+// site.config.js.
 // ============================================================
 import { createRouter, createWebHistory } from 'vue-router'
 import { site } from '@/site.config.js'
+import { applySeo } from '@/composables/useSeo.js'
 
 import HomeView    from '@/views/HomeView.vue'
 import ContactView from '@/views/ContactView.vue'
@@ -34,8 +38,16 @@ const routes = site.pages.map(page => ({
 // Catch-all → home
 routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior() { return { top: 0 } },
 })
+
+// Keep <title>, meta description, and OG/Twitter tags in sync with
+// the page navigated to — see composables/useSeo.js.
+router.afterEach(to => {
+  applySeo(site.pages.find(p => (p.slug || 'home') === to.name))
+})
+
+export default router

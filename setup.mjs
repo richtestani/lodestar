@@ -117,7 +117,10 @@ function starters(brand) {
 function buildConfig(a) {
   const s = starters(a.brandName)
   const homeSections = a.modules.map(m => ({ module: m, props: s[m] }))
-  const pages = [{ slug:'', name:'Home', view:'home' }]
+  const pages = [{ slug:'', name:'Home', view:'home', seo: {
+    title: a.tagline ? `${a.brandName} — ${a.tagline}` : a.brandName,
+    description: a.tagline,
+  }}]
   if (a.about) pages.push({ slug:'about', name:'About', view:'page', content:{
     eyebrow:'Our story', title:`About ${a.brandName}`,
     body:['Tell your story here. Where you started, what you believe, who you serve.','A second paragraph keeps it human. Edit freely in site.config.js.'],
@@ -129,6 +132,7 @@ function buildConfig(a) {
     theme: a.theme,
     contact: { email:a.email, phone:a.phone, address:a.address, mapQuery:a.address, formspree:a.formspree },
     social: [ {label:'Instagram', url:''}, {label:'Facebook', url:''} ],
+    seo: { titleSuffix: ` — ${a.brandName}`, defaultDescription: a.tagline },
     nav: { style:a.navStyle, sticky:true, links:null },
     pages,
     homeSections,
@@ -147,7 +151,7 @@ function buildConfig(a) {
 }
 
 // ── Copy template → new project ─────────────────────────────
-const SKIP = new Set(['node_modules', '.git', 'public', 'dist', 'setup.mjs', 'README.md', 'package-lock.json'])
+const SKIP = new Set(['node_modules', '.git', 'public', 'dist', 'setup.mjs', 'README.md', 'package-lock.json', '.lodestar-template'])
 function copyTemplate(dest) {
   fs.cpSync(TEMPLATE_DIR, dest, { recursive: true, filter: (src) => {
     const rel = path.relative(TEMPLATE_DIR, src)
@@ -186,8 +190,9 @@ async function main() {
   const phone     = await ask('Phone', '(555) 555-5555')
   const address   = await ask('Address', '123 Main St, Town, ST')
   const formspree = await ask('Formspree endpoint (optional)', '')
+  const siteUrl   = (await ask('Production site URL (e.g. https://acmestudio.com)', 'https://example.com')).replace(/\/+$/, '')
 
-  const answers = { projectName, brandName, tagline, theme, navStyle, about, contactPage, modules, email, phone, address, formspree }
+  const answers = { projectName, brandName, tagline, theme, navStyle, about, contactPage, modules, email, phone, address, formspree, siteUrl }
 
   // Write everything
   const dest = path.resolve(TEMPLATE_DIR, '..', projectName)
@@ -214,7 +219,15 @@ async function main() {
     /<!-- LODESTAR:FONTS -->[\s\S]*?<!-- LODESTAR:FONTS:END -->/,
     `<!-- LODESTAR:FONTS -->\n    <link href="${FONT_LINKS[theme]}" rel="stylesheet">\n    <!-- LODESTAR:FONTS:END -->`
   ).replace(/<title>.*?<\/title>/, `<title>${brandName}</title>`)
+   .replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${tagline.replace(/"/g, '&quot;')}">`)
   fs.writeFileSync(idxPath, idx)
+
+  // .env.production — site URL feeds sitemap.xml + robots.txt at build time
+  const envPath = path.join(dest, '.env.production')
+  if (fs.existsSync(envPath) && siteUrl) {
+    fs.writeFileSync(envPath, fs.readFileSync(envPath, 'utf8')
+      .replace(/^VITE_SITE_URL=.*$/m, `VITE_SITE_URL=${siteUrl}`))
+  }
 
   // package.json name
   const pkgPath = path.join(dest, 'package.json')
@@ -229,7 +242,10 @@ async function main() {
     `Switch the look in **src/themes/active.css**. Drop images into **src/assets/images/**.\n\n` +
     `## Build & deploy\n\n\`\`\`\nnpm run build   # outputs to /public\n\`\`\`\n\n` +
     `Upload /public to your host. For SPA routing, copy **deploy/.htaccess** (Apache/Bluehost) ` +
-    `into the web root, or use the Nginx rule in **deploy/nginx.conf.txt** (Forge/Vultr).\n`)
+    `into the web root, or use the Nginx rule in **deploy/nginx.conf.txt** (Forge/Vultr).\n\n` +
+    `The build also writes **robots.txt**, **sitemap.xml**, and a fully-rendered ` +
+    `\`index.html\` per page (so search engines see real content, not an empty shell) — ` +
+    `no extra step needed. If the domain changes, update \`VITE_SITE_URL\` in **.env.production**.\n`)
 
   rl?.close()
   log(`\n${C.g}✓ Done.${C.r}\n`)

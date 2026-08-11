@@ -35,22 +35,48 @@ export const site = {
     { label: 'Facebook',  url: 'https://facebook.com' },
   ],
 
+  // ── SEO ──────────────────────────────────────────────────
+  // Applied per route on navigation (src/composables/useSeo.js) and
+  // baked into the prerendered HTML for each page by the build's
+  // prerender step — so both browser tabs and crawlers/link-unfurlers
+  // see the right <title>, description, and Open Graph tags.
+  // Per-page overrides live on the page entry itself, right below.
+  seo: {
+    titleSuffix:       ' — Dovetail & Co.',   // appended to a page's title unless it sets its own
+    defaultDescription: 'Small-batch homewares, made by hand and built to last.',
+  },
+
   // ── NAVIGATION ──────────────────────────────────────────
   nav: {
-    style:  'classic',          // classic | centered | minimal
+    style:  'classic',          // classic | centered | minimal | mega (mega needs lodestar-pro-modules installed — see README)
     sticky: true,
     // Links are derived from `pages` below, but you can override here.
+    // For the 'mega' style, a link can carry `children` for a dropdown
+    // panel (accordion on mobile), e.g.:
+    //   links: [
+    //     { label: 'Shop', to: '/shop', children: [
+    //       { label: 'Tableware', to: '/shop/tableware' },
+    //       { label: 'Linens',    to: '/shop/linens' },
+    //     ]},
+    //     { label: 'About', to: '/about' },
+    //   ],
     links:  null,
   },
 
-  // ── PAGES (drives the router) ───────────────────────────
+  // ── PAGES (drives the router, nav, and per-page SEO) ────
   // view: 'home' | 'page' | 'contact' | 'sections'
   //   'page'     → prose: { eyebrow, title, body: [...], cta }
   //   'sections' → a list of modules, e.g. a standalone menu page:
   //                { slug:'menu', name:'Menu', view:'sections',
   //                  sections:[ { module:'menu', props:{...} } ] }
+  // seo (optional per page) → { title, description }. Omit either field
+  //   (or the whole object) to fall back to `${name}${seo.titleSuffix}`
+  //   and `seo.defaultDescription` above.
   pages: [
-    { slug: '',        name: 'Home',    view: 'home' },
+    { slug: '',        name: 'Home',    view: 'home', seo: {
+        title:       'Dovetail & Co. — Considered goods for everyday rituals.',
+        description: 'Small-batch homewares, made by hand and built to last.',
+    }},
     { slug: 'about',   name: 'About',   view: 'page', content: {
         eyebrow: 'Our Story',
         title:   'Made by hand, on the coast',
@@ -68,6 +94,8 @@ export const site = {
   // Reorder, remove, or duplicate freely. Each entry's `props` is the
   // content for that section. Available modules: hero, features, stats,
   // gallery, testimonials, menu, pricing, team, faq, map, contact, cta.
+  // Premium modules (e.g. parallax) become available automatically once
+  // lodestar-pro-modules is installed into modules/pro/ — see README.
   homeSections: [
 
     { module: 'hero', props: {

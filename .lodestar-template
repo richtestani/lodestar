@@ -1,0 +1,5 @@
+This file marks the raw Lodestar template repo (as opposed to a project
+setup.mjs generated from it). setup.mjs excludes it from copyTemplate, so
+it never ends up in a generated project — see scripts/prerender.mjs, which
+checks for it and skips page generation here since this repo is never
+itself deployed.

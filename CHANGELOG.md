@@ -7,14 +7,14 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-08-10
+
 ### Added
 - **`sections` page type** — pages can now be built from an ordered list of
   modules (like the home page), not just prose. Set `view: 'sections'` and a
   `sections: [...]` array on a page — e.g. a standalone menu page. Backed by a
   new `ModuleView` and a shared `SectionRenderer` component that the home page
   now also uses.
-
-### Added
 - **Hero layout variants** — `minimal` (text-only), `overlay` (copy on a
   full-bleed image), and `panel` (floating copy card over a contained image),
   alongside the existing `center` and `split`. Set per-instance via the hero
@@ -22,9 +22,33 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 - **Gallery layout variants** — `masonry` (staggered heights), `carousel`
   (horizontal swipe strip), and `mosaic` (large first image + tiles), alongside
   the default `grid`. Set per-instance via the gallery section's `variant` prop.
-
-All variants are pure CSS (no new dependencies) and documented in the README
-and the reference `site.config.js`.
+- **SEO by default** — `npm run build` now runs `vite build` and then
+  `scripts/prerender.mjs`, which writes `public/robots.txt` and
+  `public/sitemap.xml` (from `VITE_ROBOTS`/`VITE_SITE_URL`), and visits every
+  route from `site.pages` in a headless browser to write fully-rendered HTML to
+  `public/<slug>/index.html` — real content for crawlers instead of an empty
+  `#app` shell. Falls back gracefully (with a clear message) if no browser is
+  available, trying a locally-installed Chrome/Brave/Chromium/Edge before
+  giving up. `setup.mjs` now also asks for the production site URL.
+- **Per-page title/meta/OG tags** — `site.config.js` gained a `seo` block
+  (site-level defaults + optional per-page `title`/`description` overrides,
+  right on the same page entries that already drive routing and nav).
+  `composables/useSeo.js`, wired into the router, sets `<title>`, meta
+  description, canonical link, and Open Graph/Twitter Card tags on every
+  navigation — captured into the prerendered HTML above, so link-unfurlers
+  (which mostly don't run JS) see the right tags too.
+- **Premium add-on support** — `modules/registry.js` and `App.vue` use
+  `import.meta.glob` to optionally pick up `modules/pro/registry.js` and
+  `components/pro/MegaNav.vue` if a premium package (e.g.
+  `lodestar-pro-modules`) has been installed into a project; resolves to
+  nothing and changes nothing otherwise. `scripts/prerender.mjs` fails the
+  build with a clear message if `site.config.js` references a module or nav
+  style that isn't actually installed.
+- **`.lodestar-template` marker** — `npm run build` in this repo (not a
+  generated project) still runs `vite build` for a quick local check, but
+  skips robots.txt/sitemap/page prerendering, which are meaningless for
+  placeholder content that's never deployed. `setup.mjs` excludes the marker
+  from every generated project.
 
 ### Security
 - **Hardened deploy configs** — `deploy/.htaccess` and `deploy/nginx.conf.txt`
@@ -34,6 +58,9 @@ and the reference `site.config.js`.
   frame protection, and a restrictive `Permissions-Policy`.
 - **Contact-form honeypot** — `ui/ContactForm.vue` adds an off-screen `_gotcha`
   field; filled submissions are silently dropped client-side and by Formspree.
+
+All layout variants are pure CSS (no new dependencies) and documented in the
+README and the reference `site.config.js`.
 
 ## [0.1.0] — 2026-06-23
 
@@ -67,5 +94,6 @@ client site from a single interactive command.
   outputs to `/public`; `%VITE_ROBOTS%` toggles indexing via `.env.staging`
   and `.env.production`.
 
-[Unreleased]: https://github.com/richtestani/lodestar/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/richtestani/lodestar/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/richtestani/lodestar/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/richtestani/lodestar/releases/tag/v0.1.0
