@@ -2,6 +2,7 @@
   <nav
     id="main-nav"
     :class="[`nav--${style}`, { 'is-sticky': sticky, 'is-open': menuOpen }]"
+    :style="navStyleVars"
   >
     <RouterLink to="/" class="nav-logo" @click="close">
       <img v-if="logoImage" :src="asset(logoImage)" :alt="brand.name" class="nav-logo-img" />
@@ -18,7 +19,12 @@
 
     <ul class="nav-links" :class="{ open: menuOpen }">
       <li v-for="link in links" :key="link.to">
-        <RouterLink :to="link.to" class="nav-link" @click="close">{{ link.label }}</RouterLink>
+        <RouterLink :to="link.to" class="nav-link" @click="close">
+          <span class="nav-link-content" :class="{ 'icon-right': iconPosition === 'right' }">
+            <img v-if="link.icon" :src="asset(link.icon)" class="nav-link-icon" alt="" />
+            <span>{{ link.label }}</span>
+          </span>
+        </RouterLink>
       </li>
     </ul>
 
@@ -27,6 +33,9 @@
 </template>
 
 <script setup>
+// classic | centered | minimal. For a nested/dropdown mega nav, see
+// lodestar-pro-modules' MegaNav.vue (set nav.style: 'mega') — this
+// component only ever renders flat top-level links.
 import { ref, computed, onUnmounted } from 'vue'
 import { site } from '@/site.config.js'
 import { asset } from '@/composables/useAssets.js'
@@ -35,11 +44,22 @@ const brand     = site.brand
 const logoImage = brand.logoImage
 const style     = site.nav.style || 'classic'
 const sticky    = site.nav.sticky !== false
+const iconPosition = site.nav.iconPosition || 'left'
 
 const links = computed(() =>
   site.nav.links ||
   site.pages.map(p => ({ label: p.name, to: '/' + p.slug }))
 )
+
+// hoverBg / hoverText / bgImage are all optional — CSS falls back to the
+// theme's own colors/transparent background when unset.
+const navStyleVars = computed(() => {
+  const v = {}
+  if (site.nav.hoverBg)   v['--nav-hover-bg']   = site.nav.hoverBg
+  if (site.nav.hoverText) v['--nav-hover-text'] = site.nav.hoverText
+  if (site.nav.bgImage)   v['--nav-bg-image']   = `url(${asset(site.nav.bgImage)})`
+  return v
+})
 
 const menuOpen = ref(false)
 function open()  { menuOpen.value = true;  document.body.style.overflow = 'hidden' }
@@ -54,7 +74,8 @@ onUnmounted(() => { document.body.style.overflow = '' })
   height: var(--nav-height);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
-  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  background-image: linear-gradient(color-mix(in srgb, var(--bg) 94%, transparent), color-mix(in srgb, var(--bg) 94%, transparent)), var(--nav-bg-image, none);
+  background-size: cover; background-position: center; background-repeat: no-repeat;
   border-bottom: 1px solid var(--border);
 }
 #main-nav.is-sticky { position: fixed; }
@@ -67,9 +88,15 @@ onUnmounted(() => { document.body.style.overflow = '' })
   display: block; padding: 0 1.2rem; height: var(--nav-height); line-height: var(--nav-height);
   font-family: var(--font-body); font-weight: 600; font-size: 0.72rem;
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
-  opacity: 0.78; transition: opacity 0.2s, color 0.2s; white-space: nowrap;
+  opacity: 0.78; transition: opacity 0.2s, color 0.2s, background 0.2s; white-space: nowrap;
 }
-.nav-link:hover, .nav-link.router-link-exact-active { opacity: 1; color: var(--primary); }
+.nav-link:hover, .nav-link.router-link-exact-active {
+  opacity: 1; color: var(--nav-hover-text, var(--primary)); background: var(--nav-hover-bg, transparent);
+}
+
+.nav-link-content { display: inline-flex; align-items: center; gap: 0.5em; }
+.nav-link-content.icon-right { flex-direction: row-reverse; }
+.nav-link-icon { width: 1.05em; height: 1.05em; object-fit: contain; flex-shrink: 0; }
 
 /* CENTERED: logo absolutely centered, links pushed right */
 .nav--centered .nav-logo { position: absolute; left: 50%; transform: translateX(-50%); }

@@ -1,0 +1,912 @@
+diff --git a/README.md b/README.md
+index 189e502..63548b6 100644
+--- a/README.md
++++ b/README.md
+@@ -14,7 +14,7 @@ node setup.mjs          # interactive — asks name, theme, nav, pages, sections
+ node setup.mjs --yes    # non-interactive, all defaults (handy for a quick look)
+ ```
+ 
+-It creates a **sibling folder** next to this template, writes `src/site.config.js`
++It creates a **sibling folder** next to this template, writes `src/config/*`
+ from your answers, sets the theme + matching Google Fonts, and prints next steps:
+ 
+ ```
+@@ -25,15 +25,43 @@ npm run dev
+ 
+ Keep this `lodestar/` folder as the master template; never deploy it directly.
+ 
+-## The one file you edit: `src/site.config.js`
++## Config: `src/config/`
+ 
+-Everything about a site lives here — brand, theme, contact info, navigation,
+-pages, footer, and the ordered list of home-page sections. It's plain JS, so it
+-takes comments and edits cleanly in TextMate. The copy in this template is a
+-fully worked demo ("Dovetail & Co.") showing every field.
++Everything about a site — brand, theme, contact info, navigation, pages,
++footer, home page — lives in `src/config/`, split into small files so no
++single one becomes unbearable to read or edit as a site grows (Laravel's
++`config/` folder was the direct inspiration):
++
++```
++src/config/
++  site.js       brand, theme, contact, social, SEO defaults
++  nav.js        nav style, links, mega-nav settings (if using lodestar-pro-modules)
++  footer.js     footer content and layout
++  home.js       the home page — its nav/SEO entry (homePage) + its module list (homeSections)
++  pages/        one file per other page — about.js, contact.js, ...
++  modules/      optional — sitewide defaults for a specific module (see modules/README.md)
++  index.js      assembles all of the above into the final `site` object
++```
++
++`src/site.config.js` still exists — it's now a one-line re-export of
++`config/index.js` — because it's the stable import path every component,
++the router, `useSeo.js`, and any installed `lodestar-pro-modules` package
++already use. You'll never need to touch it; edit whichever file under
++`config/` actually holds what you're changing.
++
++**Adding a page:** create `config/pages/<slug>.js` (copy an existing one),
++then add one import + one entry to the `pages` array in `config/index.js`.
++That two-step isn't an oversight — `config/index.js` is also loaded by
++plain Node during the build (`scripts/prerender.mjs`), not just by Vite, so
++the auto-discovery trick used elsewhere in this codebase (`import.meta.glob`)
++isn't usable here. `setup.mjs` does this wiring for you when it scaffolds
++a new project.
++
++Each page (and the home page) has an ordered list of modules:
+ 
+ ```js
+-homeSections: [
++// config/home.js
++export const homeSections = [
+   { module: 'hero',     props: { title: '…', image: '…', primaryCta: {…} } },
+   { module: 'features', props: { items: [ {icon,title,text}, … ] } },
+   { module: 'cta',      props: { title: '…', cta: {…} } },
+@@ -92,6 +120,10 @@ Drop-in home sections in `src/modules/`, wired up in `registry.js`:
+ Add your own: build a `*.vue` that reads props, register it in `registry.js`,
+ reference it in `homeSections`.
+ 
++Want a module's settings to default the same way everywhere unless a specific
++instance overrides them? See `src/config/modules/README.md` — optional,
++most modules don't need it.
++
+ Two modules ship with layout **variants**, set per-instance via a `variant`
+ prop in the section's `props`:
+ 
+@@ -176,7 +208,15 @@ longer starts from a blank page. Requires `puppeteer` (a devDependency); if it's
+ setup.mjs                 the CLI (Node built-ins only, no install needed)
+ index.html                fonts + title injected by setup
+ src/
+-  site.config.js          ← the site definition (edit this)
++  site.config.js          stable re-export — the real content lives in config/
++  config/
++    site.js                 brand, theme, contact, social, SEO defaults
++    nav.js                  nav style, links, mega-nav settings
++    footer.js               footer content and layout
++    home.js                 home page — homePage entry + homeSections
++    pages/<slug>.js         one file per other page
++    modules/<n>.js          optional — sitewide module defaults
++    index.js                assembles all of the above into `site`
+   themes/                  base.css + _tokens.css + 4 themes + active.css
+   modules/                 swappable home sections + registry.js + manifest.js
+   modules/pro/              (not in this repo — created by installing lodestar-pro-modules)
+diff --git a/setup.mjs b/setup.mjs
+index 4970ba4..4f58e78 100644
+--- a/setup.mjs
++++ b/setup.mjs
+@@ -3,8 +3,8 @@
+ // Lodestar setup — stamps out a new client site from this template.
+ //   node setup.mjs           interactive
+ //   node setup.mjs --yes     non-interactive (defaults + demo content)
+-// Creates a sibling folder next to this template and writes a ready-to-
+-// edit src/site.config.js, the chosen theme, and matching fonts.
++// Creates a sibling folder next to this template and writes ready-to-
++// edit src/config/* files, the chosen theme, and matching fonts.
+ // ============================================================
+ import { createInterface } from 'node:readline/promises'
+ import { stdin, stdout } from 'node:process'
+@@ -114,40 +114,73 @@ function starters(brand) {
+ }
+ 
+ // ── Serialize the config ────────────────────────────────────
+-function buildConfig(a) {
+-  const s = starters(a.brandName)
+-  const homeSections = a.modules.map(m => ({ module: m, props: s[m] }))
+-  const pages = [{ slug:'', name:'Home', view:'home', seo: {
+-    title: a.tagline ? `${a.brandName} — ${a.tagline}` : a.brandName,
+-    description: a.tagline,
+-  }}]
+-  if (a.about) pages.push({ slug:'about', name:'About', view:'page', content:{
+-    eyebrow:'Our story', title:`About ${a.brandName}`,
+-    body:['Tell your story here. Where you started, what you believe, who you serve.','A second paragraph keeps it human. Edit freely in site.config.js.'],
+-    cta:{ label:'Get in touch', to:'/contact' } } })
+-  if (a.contactPage) pages.push({ slug:'contact', name:'Contact', view:'contact' })
++function toJs(data) { return JSON.stringify(data, null, 2).replace(/^/gm, '  ').trim() }
+ 
++function genSiteJs(a) {
+   const data = {
+     brand: { name:a.brandName, tagline:a.tagline, logoText:a.brandName, logoImage:'' },
+     theme: a.theme,
+     contact: { email:a.email, phone:a.phone, address:a.address, mapQuery:a.address, formspree:a.formspree },
+     social: [ {label:'Instagram', url:''}, {label:'Facebook', url:''} ],
+     seo: { titleSuffix: ` — ${a.brandName}`, defaultDescription: a.tagline },
+-    nav: { style:a.navStyle, sticky:true, links:null },
+-    pages,
+-    homeSections,
+-    footer: { style:'columns', blurb:a.tagline,
+-      columns:[ {heading:'Explore', links:pages.map(p => ({label:p.name, to:'/'+p.slug}))} ],
+-      legal:`© {year} ${a.brandName}. All rights reserved.`, fineprint:'' },
+   }
+-  const json = JSON.stringify(data, null, 2).replace(/^/gm, '  ').trim()
+-  return `// ============================================================\n` +
+-         `// site.config.js — generated by setup.mjs. Edit freely.\n` +
+-         `// One file defines brand, theme, nav, pages, footer, and the\n` +
+-         `// home page (homeSections). See the template README for the\n` +
+-         `// full field reference and the list of available modules.\n` +
+-         `// ============================================================\n\n` +
+-         `export const site = ${json}\n`
++  return `// config/site.js — generated by setup.mjs. Edit freely.\n` +
++    `export const brand = ${toJs(data.brand)}\n\n` +
++    `export const theme = ${JSON.stringify(data.theme)} // north | fresh | pulse | harvest\n\n` +
++    `export const contact = ${toJs(data.contact)}\n\n` +
++    `export const social = ${toJs(data.social)}\n\n` +
++    `export const seo = ${toJs(data.seo)}\n`
++}
++
++function genNavJs(a) {
++  return `// config/nav.js — generated by setup.mjs. Edit freely.\n` +
++    `export const nav = ${toJs({ style: a.navStyle, sticky: true, links: null })}\n`
++}
++
++function genFooterJs(a, pages) {
++  const data = { style:'columns', blurb:a.tagline,
++    columns:[ {heading:'Explore', links:pages.map(p => ({label:p.name, to:'/'+p.slug}))} ],
++    legal:`© {year} ${a.brandName}. All rights reserved.`, fineprint:'' }
++  return `// config/footer.js — generated by setup.mjs. Edit freely.\n` +
++    `export const footer = ${toJs(data)}\n`
++}
++
++function genHomeJs(a, homeSections) {
++  const homePage = { slug:'', name:'Home', view:'home', seo: {
++    title: a.tagline ? `${a.brandName} — ${a.tagline}` : a.brandName,
++    description: a.tagline,
++  }}
++  return `// config/home.js — generated by setup.mjs. Edit freely.\n` +
++    `// homePage is its pages[]/nav/SEO entry; homeSections is its module list.\n` +
++    `export const homePage = ${toJs(homePage)}\n\n` +
++    `export const homeSections = ${toJs(homeSections)}\n`
++}
++
++function genPageJs(page) {
++  return `// config/pages/${page.slug}.js — generated by setup.mjs. Edit freely.\n` +
++    `export const page = ${toJs(page)}\n`
++}
++
++function genIndexJs(pageEntries) {
++  // pageEntries: [{ slug, varName }]
++  const imports = pageEntries.map(p => `import { page as ${p.varName} } from './pages/${p.slug}.js'`).join('\n')
++  const list = ['homePage', ...pageEntries.map(p => p.varName)].join(', ')
++  return `// config/index.js — generated by setup.mjs. Adding a page later?\n` +
++    `// Add its file in pages/, then one import + one entry below — see the\n` +
++    `// comment in the template's own config/index.js for why this isn't\n` +
++    `// auto-discovered (this file loads under plain Node during the build,\n` +
++    `// not just Vite, so import.meta.glob isn't usable here).\n` +
++    `import { brand, theme, contact, social, seo } from './site.js'\n` +
++    `import { nav } from './nav.js'\n` +
++    `import { footer } from './footer.js'\n` +
++    `import { homePage, homeSections } from './home.js'\n\n` +
++    `${imports}\n\n` +
++    `export const moduleDefaults = {\n  // add sitewide module defaults here — see config/modules/README.md\n}\n\n` +
++    `export const site = {\n` +
++    `  brand, theme, contact, social, seo, nav, footer,\n` +
++    `  pages: [${list}],\n` +
++    `  homeSections,\n` +
++    `}\n`
+ }
+ 
+ // ── Copy template → new project ─────────────────────────────
+@@ -201,8 +234,27 @@ async function main() {
+   log(`\n${C.dim}Creating ${dest} …${C.r}`)
+   copyTemplate(dest)
+ 
+-  // site.config.js
+-  fs.writeFileSync(path.join(dest, 'src/site.config.js'), buildConfig(answers))
++  // config/ — site.config.js itself is untouched (already the stable
++  // one-line re-export, copied as-is by copyTemplate above)
++  const s = starters(brandName)
++  const homeSections = modules.map(m => ({ module: m, props: s[m] }))
++  const pages = []
++  if (about) pages.push({ slug:'about', name:'About', view:'page', content:{
++    eyebrow:'Our story', title:`About ${brandName}`,
++    body:['Tell your story here. Where you started, what you believe, who you serve.','A second paragraph keeps it human. Edit freely in config/pages/about.js.'],
++    cta:{ label:'Get in touch', to:'/contact' } } })
++  if (contactPage) pages.push({ slug:'contact', name:'Contact', view:'contact' })
++
++  const cfgDir = path.join(dest, 'src/config')
++  fs.writeFileSync(path.join(cfgDir, 'site.js'), genSiteJs(answers))
++  fs.writeFileSync(path.join(cfgDir, 'nav.js'), genNavJs(answers))
++  fs.writeFileSync(path.join(cfgDir, 'footer.js'), genFooterJs(answers, [{slug:'',name:'Home'}, ...pages]))
++  fs.writeFileSync(path.join(cfgDir, 'home.js'), genHomeJs(answers, homeSections))
++  fs.rmSync(path.join(cfgDir, 'pages'), { recursive: true, force: true })
++  fs.mkdirSync(path.join(cfgDir, 'pages'))
++  const pageEntries = pages.map(p => ({ slug: p.slug, varName: p.slug + 'Page' }))
++  for (const p of pages) fs.writeFileSync(path.join(cfgDir, 'pages', `${p.slug}.js`), genPageJs(p))
++  fs.writeFileSync(path.join(cfgDir, 'index.js'), genIndexJs(pageEntries))
+ 
+   // active theme (+ optional accent override)
+   let active = `/* active theme — set by setup.mjs. Re-point to switch. */\n@import './${theme}.css';\n`
+@@ -238,7 +290,8 @@ async function main() {
+   // client README
+   fs.writeFileSync(path.join(dest, 'README.md'),
+     `# ${brandName}\n\nBuilt from the Lodestar starter.\n\n## Develop\n\n\`\`\`\nnpm install\nnpm run dev\n\`\`\`\n\n` +
+-    `Edit **src/site.config.js** to change content, pages, and the home page.\n` +
++    `Edit files in **src/config/** to change content, pages, and the home page ` +
++    `(\`site.js\` for brand/contact, \`nav.js\`, \`footer.js\`, \`home.js\`, \`pages/<slug>.js\` for other pages).\n` +
+     `Switch the look in **src/themes/active.css**. Drop images into **src/assets/images/**.\n\n` +
+     `## Build & deploy\n\n\`\`\`\nnpm run build   # outputs to /public\n\`\`\`\n\n` +
+     `Upload /public to your host. For SPA routing, copy **deploy/.htaccess** (Apache/Bluehost) ` +
+@@ -254,7 +307,7 @@ async function main() {
+   log(`  ${C.c}cd ../${projectName}${C.r}`)
+   log(`  ${C.c}npm install${C.r}`)
+   log(`  ${C.c}npm run dev${C.r}\n`)
+-  log(`Then edit ${C.b}src/site.config.js${C.r} to make it yours.\n`)
++  log(`Then edit files in ${C.b}src/config/${C.r} to make it yours.\n`)
+ }
+ 
+ main().catch(e => { console.error(e); rl?.close(); process.exit(1) })
+diff --git a/src/components/SectionRenderer.vue b/src/components/SectionRenderer.vue
+index 31b2c61..7b4fcf9 100644
+--- a/src/components/SectionRenderer.vue
++++ b/src/components/SectionRenderer.vue
+@@ -3,7 +3,7 @@
+     v-for="(section, i) in sections"
+     :is="moduleFor(section.module)"
+     :key="i"
+-    v-bind="section.props || {}"
++    v-bind="propsFor(section)"
+   />
+ </template>
+ 
+@@ -12,6 +12,7 @@
+ // (with site.homeSections) and ModuleView (with a page's `sections`).
+ import { moduleRegistry } from '@/modules/registry.js'
+ import { BASE_MODULES } from '@/modules/manifest.js'
++import { moduleDefaults } from '@/site.config.js'
+ 
+ defineProps({ sections: { type: Array, default: () => [] } })
+ 
+@@ -24,4 +25,10 @@ function moduleFor(name) {
+   }
+   return c
+ }
++
++// A module's sitewide default (config/modules/<name>.js, optional) fills
++// gaps; the instance's own props in homeSections/sections always win.
++function propsFor(section) {
++  return { ...(moduleDefaults[section.module] || {}), ...(section.props || {}) }
++}
+ </script>
+diff --git a/src/config/footer.js b/src/config/footer.js
+new file mode 100644
+index 0000000..a2c9c98
+--- /dev/null
++++ b/src/config/footer.js
+@@ -0,0 +1,17 @@
++// ============================================================
++// config/footer.js — footer content and layout.
++// ============================================================
++
++export const footer = {
++  style: 'columns',           // columns | minimal
++  blurb: 'Considered goods for everyday rituals, made by hand on the North Carolina coast.',
++  columns: [
++    { heading: 'Explore', links: [
++      { label: 'Home',    to: '/' },
++      { label: 'About',   to: '/about' },
++      { label: 'Contact', to: '/contact' },
++    ]},
++  ],
++  legal: '© {year} Dovetail & Co. All rights reserved.',
++  fineprint: '',
++}
+diff --git a/src/config/home.js b/src/config/home.js
+new file mode 100644
+index 0000000..8402409
+--- /dev/null
++++ b/src/config/home.js
+@@ -0,0 +1,105 @@
++// ============================================================
++// config/home.js — the home page. Kept separate from
++// config/pages/ (rather than folded in as just another page)
++// because it works a little differently: `homePage` is its
++// pages[]/nav/SEO entry, and `homeSections` is its own
++// top-level list, the same shape `sections` takes on a
++// 'sections'-view page — see modules/registry.js for the
++// available module names.
++// ============================================================
++
++export const homePage = {
++  slug: '', name: 'Home', view: 'home', seo: {
++    title:       'Dovetail & Co. — Considered goods for everyday rituals.',
++    description: 'Small-batch homewares, made by hand and built to last.',
++  },
++}
++
++// Reorder, remove, or duplicate freely. Each entry's `props` is the
++// content for that section. Available modules: hero, features, stats,
++// gallery, testimonials, menu, pricing, team, faq, map, contact, cta.
++// Premium modules (e.g. parallax) become available automatically once
++// lodestar-pro-modules is installed into modules/pro/ — see README.
++export const homeSections = [
++
++  { module: 'hero', props: {
++      variant:  'center',      // center | split | minimal | overlay | panel
++      eyebrow:  'Dovetail & Co.',
++      title:    'Considered goods for everyday rituals.',
++      subtitle: 'Small-batch homewares, made by hand and built to last.',
++      image:    'https://picsum.photos/seed/dovetail-hero/1600/900',
++      primaryCta:   { label: 'Shop the collection', to: '/about' },
++      secondaryCta: { label: 'Our story',           to: '/about' },
++  }},
++
++  { module: 'features', props: {
++      eyebrow: 'Why Dovetail',
++      title:   'Small details, done properly',
++      columns: 3,
++      items: [
++        { icon: '✦', title: 'Made in small batches', text: 'Limited runs mean every piece gets real attention, not a production line.' },
++        { icon: '◈', title: 'Materials that age well', text: 'Solid woods, natural fibers, and finishes that look better with use.' },
++        { icon: '❖', title: 'Designed to be used', text: 'Beautiful is good. Beautiful and useful every single day is better.' },
++      ],
++  }},
++
++  { module: 'stats', props: {
++      items: [
++        { value: '12yrs', label: 'On the coast' },
++        { value: '40+',   label: 'Makers & partners' },
++        { value: '9k',    label: 'Homes served' },
++        { value: '100%',  label: 'Made to order' },
++      ],
++  }},
++
++  { module: 'gallery', props: {
++      variant: 'grid',         // grid | masonry | carousel | mosaic
++      eyebrow: 'The Collection',
++      title:   'A look at recent work',
++      images: [
++        { src: 'https://picsum.photos/seed/nw1/800/800', alt: 'Ceramic mugs' },
++        { src: 'https://picsum.photos/seed/nw2/800/800', alt: 'Linen napkins' },
++        { src: 'https://picsum.photos/seed/nw3/800/800', alt: 'Cutting board' },
++        { src: 'https://picsum.photos/seed/nw4/800/800', alt: 'Glassware' },
++        { src: 'https://picsum.photos/seed/nw5/800/800', alt: 'Woven basket' },
++        { src: 'https://picsum.photos/seed/nw6/800/800', alt: 'Brass utensils' },
++      ],
++  }},
++
++  { module: 'testimonials', props: {
++      eyebrow: 'Kind Words',
++      title:   'What people say',
++      items: [
++        { quote: 'The craftsmanship is genuinely a step above. These pieces have become the ones we reach for first.', author: 'Maren H.', role: 'Beaufort, NC' },
++        { quote: 'Gave a set as a wedding gift and got a phone call about it. That never happens.', author: 'Daniel P.', role: 'Repeat customer' },
++        { quote: 'You can feel the difference the moment you pick something up. Worth every penny.', author: 'Priya N.', role: 'Designer' },
++      ],
++  }},
++
++  { module: 'map', props: {
++      eyebrow: 'Visit',
++      title:   'Find the workshop',
++      hours: [
++        { day: 'Mon – Fri', time: '9am – 5pm' },
++        { day: 'Saturday',  time: '10am – 4pm' },
++        { day: 'Sunday',    time: 'Closed' },
++      ],
++  }},
++
++  { module: 'faq', props: {
++      eyebrow: 'Good to Know',
++      title:   'Questions, answered',
++      items: [
++        { q: 'How long does an order take?', a: 'Most made-to-order pieces ship within two to three weeks. We will always confirm a timeline before you pay.' },
++        { q: 'Do you ship nationwide?', a: 'Yes. Flat-rate shipping across the continental US, with options at checkout for everywhere else.' },
++        { q: 'Can I commission something custom?', a: 'Often, yes. Send us a note through the contact page with what you have in mind.' },
++      ],
++  }},
++
++  { module: 'cta', props: {
++      title: 'Ready to bring something home?',
++      text:  'Browse the collection or reach out about a custom commission.',
++      cta:   { label: 'Get in touch', to: '/contact' },
++  }},
++
++]
+diff --git a/src/config/index.js b/src/config/index.js
+new file mode 100644
+index 0000000..c6bbc79
+--- /dev/null
++++ b/src/config/index.js
+@@ -0,0 +1,40 @@
++// ============================================================
++// config/index.js — assembles the final `site` object from every
++// file in this folder. src/site.config.js re-exports what's built
++// here, so it stays the one stable import path everything else in
++// the app (and lodestar-pro-modules) already uses — nothing else
++// needs to know this folder exists.
++//
++// IMPORTANT — no import.meta.glob in this file or anything it
++// imports: unlike modules/registry.js or App.vue (which only ever
++// load through Vite), this exact file is also loaded by plain Node in
++// scripts/prerender.mjs (`await import(pathToFileURL(...))`) to
++// validate the config and expand routes at build time — import.meta.glob
++// only exists inside Vite's transform, so using it here would crash
++// `npm run build` outright, not just misbehave. Adding a page or a
++// module default is a two-line change (an import + an entry below) for
++// this reason — that's deliberate, not an oversight.
++//
++// Home is assembled separately (see home.js for why); every other page
++// gets one file in pages/ and one line each below.
++// ============================================================
++import { brand, theme, contact, social, seo } from './site.js'
++import { nav } from './nav.js'
++import { footer } from './footer.js'
++import { homePage, homeSections } from './home.js'
++
++import { page as aboutPage }   from './pages/about.js'
++import { page as contactPage } from './pages/contact.js'
++
++// Sitewide module defaults (optional) — add an import + an entry here
++// only for a module that actually needs one. See modules/README.md.
++// import gallery from './modules/gallery.js'
++export const moduleDefaults = {
++  // gallery,
++}
++
++export const site = {
++  brand, theme, contact, social, seo, nav, footer,
++  pages: [homePage, aboutPage, contactPage],
++  homeSections,
++}
+diff --git a/src/config/modules/README.md b/src/config/modules/README.md
+new file mode 100644
+index 0000000..0ffd45d
+--- /dev/null
++++ b/src/config/modules/README.md
+@@ -0,0 +1,30 @@
++# config/modules/
++
++Optional, per-module sitewide defaults. Most modules don't need a file
++here — this is only for when you want every instance of a module to
++default to certain settings unless a specific usage overrides them.
++
++## Adding one
++
++1. Create `<name>.js` here, matching a module name from `modules/registry.js`
++   (e.g. `gallery.js`, or `parallax.js` for a lodestar-pro-modules module):
++
++   ```js
++   // config/modules/gallery.js
++   export default { variant: 'masonry' }
++   ```
++
++2. Wire it into `config/index.js`:
++
++   ```js
++   import gallery from './modules/gallery.js'
++   export const moduleDefaults = { gallery }
++   ```
++
++That's it — `components/SectionRenderer.vue` merges this under whatever
++props a specific `homeSections`/page-`sections` instance sets, so the
++instance's own props always win; this only fills gaps you didn't set.
++
++This is a plain object, not auto-discovered — see the comment at the top
++of `config/index.js` for why (this file gets loaded by plain Node during
++the build, not just by Vite, so `import.meta.glob` isn't usable here).
+diff --git a/src/config/nav.js b/src/config/nav.js
+new file mode 100644
+index 0000000..0c2ed25
+--- /dev/null
++++ b/src/config/nav.js
+@@ -0,0 +1,57 @@
++// ============================================================
++// config/nav.js — navigation bar: style, links, and (if you're
++// using lodestar-pro-modules) mega-nav settings.
++// ============================================================
++
++export const nav = {
++  style:  'classic',          // classic | centered | minimal | mega (mega needs lodestar-pro-modules installed — see README)
++  sticky: true,
++
++  // Shared across every style (classic/centered/minimal/mega):
++  // hoverBg:      '#f4efe6',        // link background on hover — omit for transparent
++  // hoverText:    '#c0392b',        // link text color on hover — omit to use the theme's --primary
++  // bgImage:      'nav-texture.jpg',// optional background image behind the whole nav bar
++  // iconPosition: 'left',           // 'left' | 'right' — where a link's icon (if it has one) sits
++
++  // Mega only (ignored by classic/centered/minimal):
++  // trigger:    'click',   // 'click' | 'hover' — 'hover' only applies when overlay is true (see below)
++  // overlay:    true,      // true = panel floats over the page; false = pushes content down inline
++  // megaLayout: 'wide',    // 'wide' | 'stacked' — panel shape; grouping (below) is independent of this
++
++  // Links are derived from pages (config/home.js + config/pages/*.js) if
++  // left null, but you can override here. Any link — top-level or nested
++  // — can carry an `icon` (resolved the same way module images are, via
++  // src/assets/images/).
++  //
++  // For the 'mega' style, a top-level link can carry `children` in
++  // either shape — your choice per link, not decided automatically:
++  //   flat:    a plain list of links, no headings
++  //   grouped: links broken into headed columns/sections — use this
++  //            only when it genuinely helps (e.g. a furniture site's
++  //            "Our Collection" split into Couches / Tables / etc.,
++  //            each with its own sub-items). Most dropdowns don't need it.
++  //
++  //   links: [
++  //     { label: 'Our Collection', to: '/collection', icon: 'sofa.svg', children: [
++  //       // grouped — array of { heading?, links: [...] }
++  //       { heading: 'Couches', links: [
++  //         { label: 'Sofa', to: '/collection/sofa' },
++  //         { label: 'Love Seat', to: '/collection/loveseat' },
++  //         { label: 'Ottoman', to: '/collection/ottoman' },
++  //         { label: 'Recliner', to: '/collection/recliner' },
++  //       ]},
++  //       { heading: 'Tables', links: [
++  //         { label: 'Kitchen', to: '/collection/kitchen' },
++  //         { label: 'Dining', to: '/collection/dining' },
++  //         { label: 'Bedside', to: '/collection/bedside' },
++  //       ]},
++  //     ]},
++  //     { label: 'Shop', to: '/shop', children: [
++  //       // flat — plain array of links, no headings
++  //       { label: 'Tableware', to: '/shop/tableware' },
++  //       { label: 'Linens',    to: '/shop/linens' },
++  //     ]},
++  //     { label: 'About', to: '/about' },
++  //   ],
++  links:  null,
++}
+diff --git a/src/config/pages/about.js b/src/config/pages/about.js
+new file mode 100644
+index 0000000..e58faa7
+--- /dev/null
++++ b/src/config/pages/about.js
+@@ -0,0 +1,29 @@
++// ============================================================
++// config/pages/about.js — one page. Every file in this folder is
++// picked up automatically (config/index.js globs this folder) —
++// drop a new file in to add a page, no other wiring needed.
++//
++// view: 'page' | 'contact' | 'sections'
++//   'page'     → prose: { eyebrow, title, body: [...], cta }  (this file)
++//   'contact'  → the contact form, no extra fields needed
++//   'sections' → a list of modules, e.g. a standalone menu page:
++//                { slug:'menu', name:'Menu', view:'sections',
++//                  sections:[ { module:'menu', props:{...} } ] }
++//                (same module system as config/home.js's homeSections)
++//
++// seo (optional) → { title, description }; omit to fall back to
++// `${name}${seo.titleSuffix}` / `seo.defaultDescription` (site.js).
++// ============================================================
++
++export const page = {
++  slug: 'about', name: 'About', view: 'page', content: {
++    eyebrow: 'Our Story',
++    title:   'Made by hand, on the coast',
++    body: [
++      'Dovetail began in a small workshop with a simple belief — that the things we use every day deserve to be made with care.',
++      'We design and produce in small batches, choosing materials that age well and partners who share our standards.',
++      'Whether it is a gift or something for your own table, we want it to mean a little more.',
++    ],
++    cta: { label: 'Get in touch', to: '/contact' },
++  },
++}
+diff --git a/src/config/pages/contact.js b/src/config/pages/contact.js
+new file mode 100644
+index 0000000..db1e625
+--- /dev/null
++++ b/src/config/pages/contact.js
+@@ -0,0 +1,6 @@
++// ============================================================
++// config/pages/contact.js — see about.js for the format notes.
++// view: 'contact' → the contact form (src/components/ui/ContactForm.vue)
++// ============================================================
++
++export const page = { slug: 'contact', name: 'Contact', view: 'contact' }
+diff --git a/src/config/site.js b/src/config/site.js
+new file mode 100644
+index 0000000..d51d58f
+--- /dev/null
++++ b/src/config/site.js
+@@ -0,0 +1,44 @@
++// ============================================================
++// config/site.js — brand identity, theme, business info, SEO
++// defaults. The stuff that's short and rarely touched.
++//
++// Nav lives in nav.js, footer in footer.js, the home page in
++// home.js, every other page in pages/<slug>.js, and per-module
++// sitewide defaults (optional) in modules/<name>.js. See
++// config/index.js for how it's all assembled back into `site`.
++// ============================================================
++
++export const brand = {
++  name:      'Dovetail & Co.',
++  tagline:   'Considered goods for everyday rituals.',
++  logoText:  'Dovetail',     // text logo (used when logoImage is empty)
++  logoImage: '',              // optional: a filename in src/assets/images/
++}
++
++// Visual identity lives in src/themes/<theme>.css. setup.mjs writes
++// the matching font <link> into index.html and points active.css here.
++export const theme = 'north' // north | fresh | pulse | harvest
++
++// Feeds footer, contact form, map
++export const contact = {
++  email:    'hello@dovetail.co',
++  phone:    '(555) 016-2200',
++  address:  '48 Harbor Lane, Beaufort, NC 28516',
++  mapQuery: '48 Harbor Lane, Beaufort, NC',   // used by the map module
++  formspree:'',               // paste your https://formspree.io/f/xxxx endpoint
++}
++
++export const social = [
++  { label: 'Instagram', url: 'https://instagram.com' },
++  { label: 'Facebook',  url: 'https://facebook.com' },
++]
++
++// Applied per route on navigation (src/composables/useSeo.js) and
++// baked into the prerendered HTML for each page by the build's
++// prerender step — so both browser tabs and crawlers/link-unfurlers
++// see the right <title>, description, and Open Graph tags.
++// Per-page overrides live on the page's own file, right next to it.
++export const seo = {
++  titleSuffix:       ' — Dovetail & Co.',   // appended to a page's title unless it sets its own
++  defaultDescription: 'Small-batch homewares, made by hand and built to last.',
++}
+diff --git a/src/site.config.js b/src/site.config.js
+index 64fa047..70d640a 100644
+--- a/src/site.config.js
++++ b/src/site.config.js
+@@ -1,233 +1,13 @@
+ // ============================================================
+-// site.config.js — THE definition of this site.
+-// Edit this one file (in TextMate, with comments) to change
+-// brand, theme, navigation, pages, footer, and the home page.
+-// `node setup.mjs` generates this from your answers; after that,
+-// everything below is fair game to hand-tune.
++// site.config.js — stable import path. Every component, the
++// router, useSeo.js, and lodestar-pro-modules all import from
++// here (`@/site.config.js`) — that path is not going to move.
++//
++// The actual content lives in config/ now, split up so no single
++// file becomes unbearable to edit as a site grows — see config/index.js
++// for how it's assembled, or just go edit the file for whatever
++// you're changing: config/site.js (brand/contact/SEO), config/nav.js,
++// config/footer.js, config/home.js, config/pages/<slug>.js, or
++// config/modules/<name>.js (optional sitewide module defaults).
+ // ============================================================
+-
+-export const site = {
+-
+-  // ── BRAND ───────────────────────────────────────────────
+-  brand: {
+-    name:      'Dovetail & Co.',
+-    tagline:   'Considered goods for everyday rituals.',
+-    logoText:  'Dovetail',     // text logo (used when logoImage is empty)
+-    logoImage: '',              // optional: a filename in src/assets/images/
+-  },
+-
+-  // ── THEME ───────────────────────────────────────────────
+-  // Visual identity lives in src/themes/<theme>.css. setup.mjs writes
+-  // the matching font <link> into index.html and points active.css here.
+-  theme: 'north',               // north | fresh | pulse | harvest
+-
+-  // ── BUSINESS INFO (feeds footer, contact form, map) ─────
+-  contact: {
+-    email:    'hello@dovetail.co',
+-    phone:    '(555) 016-2200',
+-    address:  '48 Harbor Lane, Beaufort, NC 28516',
+-    mapQuery: '48 Harbor Lane, Beaufort, NC',   // used by the map module
+-    formspree:'',               // paste your https://formspree.io/f/xxxx endpoint
+-  },
+-
+-  social: [
+-    { label: 'Instagram', url: 'https://instagram.com' },
+-    { label: 'Facebook',  url: 'https://facebook.com' },
+-  ],
+-
+-  // ── SEO ──────────────────────────────────────────────────
+-  // Applied per route on navigation (src/composables/useSeo.js) and
+-  // baked into the prerendered HTML for each page by the build's
+-  // prerender step — so both browser tabs and crawlers/link-unfurlers
+-  // see the right <title>, description, and Open Graph tags.
+-  // Per-page overrides live on the page entry itself, right below.
+-  seo: {
+-    titleSuffix:       ' — Dovetail & Co.',   // appended to a page's title unless it sets its own
+-    defaultDescription: 'Small-batch homewares, made by hand and built to last.',
+-  },
+-
+-  // ── NAVIGATION ──────────────────────────────────────────
+-  nav: {
+-    style:  'classic',          // classic | centered | minimal | mega (mega needs lodestar-pro-modules installed — see README)
+-    sticky: true,
+-
+-    // Shared across every style (classic/centered/minimal/mega):
+-    // hoverBg:      '#f4efe6',        // link background on hover — omit for transparent
+-    // hoverText:    '#c0392b',        // link text color on hover — omit to use the theme's --primary
+-    // bgImage:      'nav-texture.jpg',// optional background image behind the whole nav bar
+-    // iconPosition: 'left',           // 'left' | 'right' — where a link's icon (if it has one) sits
+-
+-    // Mega only (ignored by classic/centered/minimal):
+-    // trigger:    'click',   // 'click' | 'hover' — 'hover' only applies when overlay is true (see below)
+-    // overlay:    true,      // true = panel floats over the page; false = pushes content down inline
+-    // megaLayout: 'wide',    // 'wide' | 'stacked' — panel shape; grouping (below) is independent of this
+-
+-    // Links are derived from `pages` below, but you can override here.
+-    // Any link — top-level or nested — can carry an `icon` (resolved the
+-    // same way module images are, via src/assets/images/).
+-    //
+-    // For the 'mega' style, a top-level link can carry `children` in
+-    // either shape — your choice per link, not decided automatically:
+-    //   flat:    a plain list of links, no headings
+-    //   grouped: links broken into headed columns/sections — use this
+-    //            only when it genuinely helps (e.g. a furniture site's
+-    //            "Our Collection" split into Couches / Tables / etc.,
+-    //            each with its own sub-items). Most dropdowns don't need it.
+-    //
+-    //   links: [
+-    //     { label: 'Our Collection', to: '/collection', icon: 'sofa.svg', children: [
+-    //       // grouped — array of { heading?, links: [...] }
+-    //       { heading: 'Couches', links: [
+-    //         { label: 'Sofa', to: '/collection/sofa' },
+-    //         { label: 'Love Seat', to: '/collection/loveseat' },
+-    //         { label: 'Ottoman', to: '/collection/ottoman' },
+-    //         { label: 'Recliner', to: '/collection/recliner' },
+-    //       ]},
+-    //       { heading: 'Tables', links: [
+-    //         { label: 'Kitchen', to: '/collection/kitchen' },
+-    //         { label: 'Dining', to: '/collection/dining' },
+-    //         { label: 'Bedside', to: '/collection/bedside' },
+-    //       ]},
+-    //     ]},
+-    //     { label: 'Shop', to: '/shop', children: [
+-    //       // flat — plain array of links, no headings
+-    //       { label: 'Tableware', to: '/shop/tableware' },
+-    //       { label: 'Linens',    to: '/shop/linens' },
+-    //     ]},
+-    //     { label: 'About', to: '/about' },
+-    //   ],
+-    links:  null,
+-  },
+-
+-  // ── PAGES (drives the router, nav, and per-page SEO) ────
+-  // view: 'home' | 'page' | 'contact' | 'sections'
+-  //   'page'     → prose: { eyebrow, title, body: [...], cta }
+-  //   'sections' → a list of modules, e.g. a standalone menu page:
+-  //                { slug:'menu', name:'Menu', view:'sections',
+-  //                  sections:[ { module:'menu', props:{...} } ] }
+-  // seo (optional per page) → { title, description }. Omit either field
+-  //   (or the whole object) to fall back to `${name}${seo.titleSuffix}`
+-  //   and `seo.defaultDescription` above.
+-  pages: [
+-    { slug: '',        name: 'Home',    view: 'home', seo: {
+-        title:       'Dovetail & Co. — Considered goods for everyday rituals.',
+-        description: 'Small-batch homewares, made by hand and built to last.',
+-    }},
+-    { slug: 'about',   name: 'About',   view: 'page', content: {
+-        eyebrow: 'Our Story',
+-        title:   'Made by hand, on the coast',
+-        body: [
+-          'Dovetail began in a small workshop with a simple belief — that the things we use every day deserve to be made with care.',
+-          'We design and produce in small batches, choosing materials that age well and partners who share our standards.',
+-          'Whether it is a gift or something for your own table, we want it to mean a little more.',
+-        ],
+-        cta: { label: 'Get in touch', to: '/contact' },
+-    }},
+-    { slug: 'contact', name: 'Contact', view: 'contact' },
+-  ],
+-
+-  // ── HOME PAGE — ordered list of modules ─────────────────
+-  // Reorder, remove, or duplicate freely. Each entry's `props` is the
+-  // content for that section. Available modules: hero, features, stats,
+-  // gallery, testimonials, menu, pricing, team, faq, map, contact, cta.
+-  // Premium modules (e.g. parallax) become available automatically once
+-  // lodestar-pro-modules is installed into modules/pro/ — see README.
+-  homeSections: [
+-
+-    { module: 'hero', props: {
+-        variant:  'center',      // center | split | minimal | overlay | panel
+-        eyebrow:  'Dovetail & Co.',
+-        title:    'Considered goods for everyday rituals.',
+-        subtitle: 'Small-batch homewares, made by hand and built to last.',
+-        image:    'https://picsum.photos/seed/dovetail-hero/1600/900',
+-        primaryCta:   { label: 'Shop the collection', to: '/about' },
+-        secondaryCta: { label: 'Our story',           to: '/about' },
+-    }},
+-
+-    { module: 'features', props: {
+-        eyebrow: 'Why Dovetail',
+-        title:   'Small details, done properly',
+-        columns: 3,
+-        items: [
+-          { icon: '✦', title: 'Made in small batches', text: 'Limited runs mean every piece gets real attention, not a production line.' },
+-          { icon: '◈', title: 'Materials that age well', text: 'Solid woods, natural fibers, and finishes that look better with use.' },
+-          { icon: '❖', title: 'Designed to be used', text: 'Beautiful is good. Beautiful and useful every single day is better.' },
+-        ],
+-    }},
+-
+-    { module: 'stats', props: {
+-        items: [
+-          { value: '12yrs', label: 'On the coast' },
+-          { value: '40+',   label: 'Makers & partners' },
+-          { value: '9k',    label: 'Homes served' },
+-          { value: '100%',  label: 'Made to order' },
+-        ],
+-    }},
+-
+-    { module: 'gallery', props: {
+-        variant: 'grid',         // grid | masonry | carousel | mosaic
+-        eyebrow: 'The Collection',
+-        title:   'A look at recent work',
+-        images: [
+-          { src: 'https://picsum.photos/seed/nw1/800/800', alt: 'Ceramic mugs' },
+-          { src: 'https://picsum.photos/seed/nw2/800/800', alt: 'Linen napkins' },
+-          { src: 'https://picsum.photos/seed/nw3/800/800', alt: 'Cutting board' },
+-          { src: 'https://picsum.photos/seed/nw4/800/800', alt: 'Glassware' },
+-          { src: 'https://picsum.photos/seed/nw5/800/800', alt: 'Woven basket' },
+-          { src: 'https://picsum.photos/seed/nw6/800/800', alt: 'Brass utensils' },
+-        ],
+-    }},
+-
+-    { module: 'testimonials', props: {
+-        eyebrow: 'Kind Words',
+-        title:   'What people say',
+-        items: [
+-          { quote: 'The craftsmanship is genuinely a step above. These pieces have become the ones we reach for first.', author: 'Maren H.', role: 'Beaufort, NC' },
+-          { quote: 'Gave a set as a wedding gift and got a phone call about it. That never happens.', author: 'Daniel P.', role: 'Repeat customer' },
+-          { quote: 'You can feel the difference the moment you pick something up. Worth every penny.', author: 'Priya N.', role: 'Designer' },
+-        ],
+-    }},
+-
+-    { module: 'map', props: {
+-        eyebrow: 'Visit',
+-        title:   'Find the workshop',
+-        hours: [
+-          { day: 'Mon – Fri', time: '9am – 5pm' },
+-          { day: 'Saturday',  time: '10am – 4pm' },
+-          { day: 'Sunday',    time: 'Closed' },
+-        ],
+-    }},
+-
+-    { module: 'faq', props: {
+-        eyebrow: 'Good to Know',
+-        title:   'Questions, answered',
+-        items: [
+-          { q: 'How long does an order take?', a: 'Most made-to-order pieces ship within two to three weeks. We will always confirm a timeline before you pay.' },
+-          { q: 'Do you ship nationwide?', a: 'Yes. Flat-rate shipping across the continental US, with options at checkout for everywhere else.' },
+-          { q: 'Can I commission something custom?', a: 'Often, yes. Send us a note through the contact page with what you have in mind.' },
+-        ],
+-    }},
+-
+-    { module: 'cta', props: {
+-        title: 'Ready to bring something home?',
+-        text:  'Browse the collection or reach out about a custom commission.',
+-        cta:   { label: 'Get in touch', to: '/contact' },
+-    }},
+-
+-  ],
+-
+-  // ── FOOTER ──────────────────────────────────────────────
+-  footer: {
+-    style: 'columns',           // columns | minimal
+-    blurb: 'Considered goods for everyday rituals, made by hand on the North Carolina coast.',
+-    columns: [
+-      { heading: 'Explore', links: [
+-        { label: 'Home',    to: '/' },
+-        { label: 'About',   to: '/about' },
+-        { label: 'Contact', to: '/contact' },
+-      ]},
+-    ],
+-    legal: '© {year} Dovetail & Co. All rights reserved.',
+-    fineprint: '',
+-  },
+-}
++export { site, moduleDefaults } from './config/index.js'

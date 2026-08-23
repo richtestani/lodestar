@@ -1,0 +1,174 @@
+diff --git a/src/App.vue b/src/App.vue
+index 9356df6..7ab5fc8 100644
+--- a/src/App.vue
++++ b/src/App.vue
+@@ -1,4 +1,7 @@
+ <template>
++  <div v-if="showFallbackNotice" class="lodestar-dev-notice">
++    ⚠ nav.style is "mega" but lodestar-pro-modules isn't installed (src/components/pro/MegaNav.vue not found) — showing the standard nav instead. This banner only shows in dev; <code>npm run build</code> fails outright instead.
++  </div>
+   <component :is="navComponent" />
+   <RouterView />
+   <AppFooter />
+@@ -16,6 +19,7 @@ import { site } from '@/site.config.js'
+ const proNavMatches = import.meta.glob('./components/pro/MegaNav.vue', { eager: true })
+ const ProMegaNav = Object.values(proNavMatches)[0]?.default || null
+ 
++const showFallbackNotice = import.meta.env.DEV && site.nav.style === 'mega' && !ProMegaNav
+ if (site.nav.style === 'mega' && !ProMegaNav) {
+   console.warn(`[lodestar] nav.style is "mega" but lodestar-pro-modules isn't installed (components/pro/MegaNav.vue not found) — falling back to the standard nav`)
+ }
+@@ -28,4 +32,11 @@ const navComponent = computed(() => (site.nav.style === 'mega' && ProMegaNav) ?
+    src/themes/active.css (or re-run `node setup.mjs`). */
+ @import './themes/active.css';
+ @import './themes/base.css';
++
++.lodestar-dev-notice {
++  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
++  background: #b91c1c; color: #fff; font: 600 12.5px/1.5 system-ui, sans-serif;
++  padding: 0.5rem 1rem; text-align: center;
++}
++.lodestar-dev-notice code { background: rgba(255,255,255,0.18); padding: 0.05rem 0.35rem; border-radius: 3px; }
+ </style>
+diff --git a/src/components/AppNav.vue b/src/components/AppNav.vue
+index 620d9e7..5607626 100644
+--- a/src/components/AppNav.vue
++++ b/src/components/AppNav.vue
+@@ -2,6 +2,7 @@
+   <nav
+     id="main-nav"
+     :class="[`nav--${style}`, { 'is-sticky': sticky, 'is-open': menuOpen }]"
++    :style="navStyleVars"
+   >
+     <RouterLink to="/" class="nav-logo" @click="close">
+       <img v-if="logoImage" :src="asset(logoImage)" :alt="brand.name" class="nav-logo-img" />
+@@ -18,7 +19,12 @@
+ 
+     <ul class="nav-links" :class="{ open: menuOpen }">
+       <li v-for="link in links" :key="link.to">
+-        <RouterLink :to="link.to" class="nav-link" @click="close">{{ link.label }}</RouterLink>
++        <RouterLink :to="link.to" class="nav-link" @click="close">
++          <span class="nav-link-content" :class="{ 'icon-right': iconPosition === 'right' }">
++            <img v-if="link.icon" :src="asset(link.icon)" class="nav-link-icon" alt="" />
++            <span>{{ link.label }}</span>
++          </span>
++        </RouterLink>
+       </li>
+     </ul>
+ 
+@@ -27,6 +33,9 @@
+ </template>
+ 
+ <script setup>
++// classic | centered | minimal. For a nested/dropdown mega nav, see
++// lodestar-pro-modules' MegaNav.vue (set nav.style: 'mega') — this
++// component only ever renders flat top-level links.
+ import { ref, computed, onUnmounted } from 'vue'
+ import { site } from '@/site.config.js'
+ import { asset } from '@/composables/useAssets.js'
+@@ -35,12 +44,23 @@ const brand     = site.brand
+ const logoImage = brand.logoImage
+ const style     = site.nav.style || 'classic'
+ const sticky    = site.nav.sticky !== false
++const iconPosition = site.nav.iconPosition || 'left'
+ 
+ const links = computed(() =>
+   site.nav.links ||
+   site.pages.map(p => ({ label: p.name, to: '/' + p.slug }))
+ )
+ 
++// hoverBg / hoverText / bgImage are all optional — CSS falls back to the
++// theme's own colors/transparent background when unset.
++const navStyleVars = computed(() => {
++  const v = {}
++  if (site.nav.hoverBg)   v['--nav-hover-bg']   = site.nav.hoverBg
++  if (site.nav.hoverText) v['--nav-hover-text'] = site.nav.hoverText
++  if (site.nav.bgImage)   v['--nav-bg-image']   = `url(${asset(site.nav.bgImage)})`
++  return v
++})
++
+ const menuOpen = ref(false)
+ function open()  { menuOpen.value = true;  document.body.style.overflow = 'hidden' }
+ function close() { menuOpen.value = false; document.body.style.overflow = '' }
+@@ -54,7 +74,8 @@ onUnmounted(() => { document.body.style.overflow = '' })
+   height: var(--nav-height);
+   display: flex; align-items: center; justify-content: space-between;
+   padding: 0 clamp(1.25rem, 4vw, 3rem);
+-  background: color-mix(in srgb, var(--bg) 94%, transparent);
++  background-image: linear-gradient(color-mix(in srgb, var(--bg) 94%, transparent), color-mix(in srgb, var(--bg) 94%, transparent)), var(--nav-bg-image, none);
++  background-size: cover; background-position: center; background-repeat: no-repeat;
+   border-bottom: 1px solid var(--border);
+ }
+ #main-nav.is-sticky { position: fixed; }
+@@ -67,9 +88,15 @@ onUnmounted(() => { document.body.style.overflow = '' })
+   display: block; padding: 0 1.2rem; height: var(--nav-height); line-height: var(--nav-height);
+   font-family: var(--font-body); font-weight: 600; font-size: 0.72rem;
+   letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
+-  opacity: 0.78; transition: opacity 0.2s, color 0.2s; white-space: nowrap;
++  opacity: 0.78; transition: opacity 0.2s, color 0.2s, background 0.2s; white-space: nowrap;
++}
++.nav-link:hover, .nav-link.router-link-exact-active {
++  opacity: 1; color: var(--nav-hover-text, var(--primary)); background: var(--nav-hover-bg, transparent);
+ }
+-.nav-link:hover, .nav-link.router-link-exact-active { opacity: 1; color: var(--primary); }
++
++.nav-link-content { display: inline-flex; align-items: center; gap: 0.5em; }
++.nav-link-content.icon-right { flex-direction: row-reverse; }
++.nav-link-icon { width: 1.05em; height: 1.05em; object-fit: contain; flex-shrink: 0; }
+ 
+ /* CENTERED: logo absolutely centered, links pushed right */
+ .nav--centered .nav-logo { position: absolute; left: 50%; transform: translateX(-50%); }
+diff --git a/src/site.config.js b/src/site.config.js
+index 0de39ce..64fa047 100644
+--- a/src/site.config.js
++++ b/src/site.config.js
+@@ -50,11 +50,47 @@ export const site = {
+   nav: {
+     style:  'classic',          // classic | centered | minimal | mega (mega needs lodestar-pro-modules installed — see README)
+     sticky: true,
++
++    // Shared across every style (classic/centered/minimal/mega):
++    // hoverBg:      '#f4efe6',        // link background on hover — omit for transparent
++    // hoverText:    '#c0392b',        // link text color on hover — omit to use the theme's --primary
++    // bgImage:      'nav-texture.jpg',// optional background image behind the whole nav bar
++    // iconPosition: 'left',           // 'left' | 'right' — where a link's icon (if it has one) sits
++
++    // Mega only (ignored by classic/centered/minimal):
++    // trigger:    'click',   // 'click' | 'hover' — 'hover' only applies when overlay is true (see below)
++    // overlay:    true,      // true = panel floats over the page; false = pushes content down inline
++    // megaLayout: 'wide',    // 'wide' | 'stacked' — panel shape; grouping (below) is independent of this
++
+     // Links are derived from `pages` below, but you can override here.
+-    // For the 'mega' style, a link can carry `children` for a dropdown
+-    // panel (accordion on mobile), e.g.:
++    // Any link — top-level or nested — can carry an `icon` (resolved the
++    // same way module images are, via src/assets/images/).
++    //
++    // For the 'mega' style, a top-level link can carry `children` in
++    // either shape — your choice per link, not decided automatically:
++    //   flat:    a plain list of links, no headings
++    //   grouped: links broken into headed columns/sections — use this
++    //            only when it genuinely helps (e.g. a furniture site's
++    //            "Our Collection" split into Couches / Tables / etc.,
++    //            each with its own sub-items). Most dropdowns don't need it.
++    //
+     //   links: [
++    //     { label: 'Our Collection', to: '/collection', icon: 'sofa.svg', children: [
++    //       // grouped — array of { heading?, links: [...] }
++    //       { heading: 'Couches', links: [
++    //         { label: 'Sofa', to: '/collection/sofa' },
++    //         { label: 'Love Seat', to: '/collection/loveseat' },
++    //         { label: 'Ottoman', to: '/collection/ottoman' },
++    //         { label: 'Recliner', to: '/collection/recliner' },
++    //       ]},
++    //       { heading: 'Tables', links: [
++    //         { label: 'Kitchen', to: '/collection/kitchen' },
++    //         { label: 'Dining', to: '/collection/dining' },
++    //         { label: 'Bedside', to: '/collection/bedside' },
++    //       ]},
++    //     ]},
+     //     { label: 'Shop', to: '/shop', children: [
++    //       // flat — plain array of links, no headings
+     //       { label: 'Tableware', to: '/shop/tableware' },
+     //       { label: 'Linens',    to: '/shop/linens' },
+     //     ]},
