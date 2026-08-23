@@ -14,7 +14,7 @@ node setup.mjs          # interactive — asks name, theme, nav, pages, sections
 node setup.mjs --yes    # non-interactive, all defaults (handy for a quick look)
 ```
 
-It creates a **sibling folder** next to this template, writes `src/site.config.js`
+It creates a **sibling folder** next to this template, writes `src/config/*`
 from your answers, sets the theme + matching Google Fonts, and prints next steps:
 
 ```
@@ -25,15 +25,43 @@ npm run dev
 
 Keep this `lodestar/` folder as the master template; never deploy it directly.
 
-## The one file you edit: `src/site.config.js`
+## Config: `src/config/`
 
-Everything about a site lives here — brand, theme, contact info, navigation,
-pages, footer, and the ordered list of home-page sections. It's plain JS, so it
-takes comments and edits cleanly in TextMate. The copy in this template is a
-fully worked demo ("Dovetail & Co.") showing every field.
+Everything about a site — brand, theme, contact info, navigation, pages,
+footer, home page — lives in `src/config/`, split into small files so no
+single one becomes unbearable to read or edit as a site grows (Laravel's
+`config/` folder was the direct inspiration):
+
+```
+src/config/
+  site.js       brand, theme, contact, social, SEO defaults
+  nav.js        nav style, links, mega-nav settings (if using lodestar-pro-modules)
+  footer.js     footer content and layout
+  home.js       the home page — its nav/SEO entry (homePage) + its module list (homeSections)
+  pages/        one file per other page — about.js, contact.js, ...
+  modules/      optional — sitewide defaults for a specific module (see modules/README.md)
+  index.js      assembles all of the above into the final `site` object
+```
+
+`src/site.config.js` still exists — it's now a one-line re-export of
+`config/index.js` — because it's the stable import path every component,
+the router, `useSeo.js`, and any installed `lodestar-pro-modules` package
+already use. You'll never need to touch it; edit whichever file under
+`config/` actually holds what you're changing.
+
+**Adding a page:** create `config/pages/<slug>.js` (copy an existing one),
+then add one import + one entry to the `pages` array in `config/index.js`.
+That two-step isn't an oversight — `config/index.js` is also loaded by
+plain Node during the build (`scripts/prerender.mjs`), not just by Vite, so
+the auto-discovery trick used elsewhere in this codebase (`import.meta.glob`)
+isn't usable here. `setup.mjs` does this wiring for you when it scaffolds
+a new project.
+
+Each page (and the home page) has an ordered list of modules:
 
 ```js
-homeSections: [
+// config/home.js
+export const homeSections = [
   { module: 'hero',     props: { title: '…', image: '…', primaryCta: {…} } },
   { module: 'features', props: { items: [ {icon,title,text}, … ] } },
   { module: 'cta',      props: { title: '…', cta: {…} } },
@@ -91,6 +119,10 @@ Drop-in home sections in `src/modules/`, wired up in `registry.js`:
 
 Add your own: build a `*.vue` that reads props, register it in `registry.js`,
 reference it in `homeSections`.
+
+Want a module's settings to default the same way everywhere unless a specific
+instance overrides them? See `src/config/modules/README.md` — optional,
+most modules don't need it.
 
 Two modules ship with layout **variants**, set per-instance via a `variant`
 prop in the section's `props`:
@@ -176,7 +208,15 @@ longer starts from a blank page. Requires `puppeteer` (a devDependency); if it's
 setup.mjs                 the CLI (Node built-ins only, no install needed)
 index.html                fonts + title injected by setup
 src/
-  site.config.js          ← the site definition (edit this)
+  site.config.js          stable re-export — the real content lives in config/
+  config/
+    site.js                 brand, theme, contact, social, SEO defaults
+    nav.js                  nav style, links, mega-nav settings
+    footer.js               footer content and layout
+    home.js                 home page — homePage entry + homeSections
+    pages/<slug>.js         one file per other page
+    modules/<n>.js          optional — sitewide module defaults
+    index.js                assembles all of the above into `site`
   themes/                  base.css + _tokens.css + 4 themes + active.css
   modules/                 swappable home sections + registry.js + manifest.js
   modules/pro/              (not in this repo — created by installing lodestar-pro-modules)
