@@ -7,6 +7,60 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-08-23
+
+### Added
+- **`collection` page type** — a listing page + one detail page per item,
+  from a single `items[]` list (a shop, team roster, portfolio, whatever a
+  project needs — not retail-specific despite the example). Router
+  generates exactly two routes regardless of catalog size (`/shop` and
+  `/shop/:itemSlug`); `scripts/prerender.mjs` expands `items[]` into real
+  URLs at build time so every item gets its own prerendered page and
+  sitemap entry like any other page. New `CollectionView`/`CollectionItemView`
+  render `indexSections`/`itemSections` through the same `SectionRenderer`
+  every other page type uses — `SectionRenderer` gained a `context` prop
+  for threading `items`/`item` into whichever modules ask for them, so no
+  parallel rendering system was needed for this.
+- Three new base modules: `collectionGrid`, `itemHero`, `itemDetail` —
+  deliberately domain-neutral (a `price` line is just an optional line
+  under the item name, not retail-specific machinery). See
+  `config/pages/shop.js` for a fully worked example.
+- `collectionGrid` can group its listing by any field an item carries —
+  `groupBy: 'category'`, `groupBy: 'author'`, whatever fits — sorted
+  alphabetically by default, or pinned with `groupOrder: [...]`. Purely a
+  display concern: still one route, one prerendered page; grouping
+  doesn't touch routing, the sitemap, or validation.
+- Build-time validation for collections: every item needs a slug, slugs
+  must be unique within a collection, and (as with every other page)
+  referencing an unregistered module fails the build with a clear message
+  instead of shipping a broken page.
+- Per-item SEO — an item can set its own `seo: { title, description }`;
+  the router builds a synthetic page-shaped object for `useSeo.js` so item
+  pages get correct title/meta/OG tags the same way every other page does.
+- **`showInNav: false`** on any page — keeps it out of the nav's
+  auto-derived link list while it still gets a real, crawlable URL (a
+  privacy policy, terms of service). Doesn't apply if `nav.links` is set
+  by hand — that list is already exactly what you wrote.
+
+## [0.3.0] — 2026-08-16
+
+### Added
+- **`src/config/` split** — `site.config.js` is now a one-line stable
+  re-export; the actual content lives in `config/site.js`, `nav.js`,
+  `footer.js`, `home.js`, `pages/<slug>.js` (one file per page), and
+  optional `modules/<name>.js` (sitewide module defaults, merged under a
+  module instance's own props by `SectionRenderer`). Nothing importing
+  `@/site.config.js` — including an installed `lodestar-pro-modules`
+  package — needed to change. `setup.mjs` generates the split files for
+  every new project. Adding a page is one file + one import/entry in
+  `config/index.js` — deliberately not auto-discovered, since that file
+  is also loaded by plain Node during the build (`scripts/prerender.mjs`),
+  where `import.meta.glob` isn't available.
+- **Mega-nav settings** — `trigger` (click/hover), `overlay` (floating vs.
+  inline), `megaLayout` (wide/stacked), plus `hoverBg`/`hoverText`/`bgImage`/
+  `iconPosition`, shared across the base nav styles too. See
+  `lodestar-pro-modules`' own changelog for the mega-nav side of this.
+
 ## [0.2.0] — 2026-08-10
 
 ### Added

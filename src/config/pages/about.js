@@ -3,16 +3,23 @@
 // picked up automatically (config/index.js globs this folder) —
 // drop a new file in to add a page, no other wiring needed.
 //
-// view: 'page' | 'contact' | 'sections'
-//   'page'     → prose: { eyebrow, title, body: [...], cta }  (this file)
-//   'contact'  → the contact form, no extra fields needed
-//   'sections' → a list of modules, e.g. a standalone menu page:
-//                { slug:'menu', name:'Menu', view:'sections',
-//                  sections:[ { module:'menu', props:{...} } ] }
-//                (same module system as config/home.js's homeSections)
+// view: 'page' | 'contact' | 'sections' | 'collection'
+//   'page'       → prose: { eyebrow, title, body: [...], cta }  (this file)
+//   'contact'    → the contact form, no extra fields needed
+//   'sections'   → a list of modules, e.g. a standalone menu page:
+//                  { slug:'menu', name:'Menu', view:'sections',
+//                    sections:[ { module:'menu', props:{...} } ] }
+//                  (same module system as config/home.js's homeSections)
+//   'collection' → a listing + one page per item — see config/pages/shop.js
 //
 // seo (optional) → { title, description }; omit to fall back to
 // `${name}${seo.titleSuffix}` / `seo.defaultDescription` (site.js).
+//
+// showInNav (optional) → set to `false` to keep a page out of the nav's
+// auto-derived link list (e.g. a privacy policy nobody should have to
+// hunt for in the header, but that still needs a real URL). Doesn't
+// apply if nav.links is set by hand in config/nav.js — that list is
+// already exactly what you wrote.
 // ============================================================
 
 export const page = {

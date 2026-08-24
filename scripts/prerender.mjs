@@ -209,7 +209,11 @@ async function validateModules(site, baseManifest) {
 
   const usedModules = new Set()
   for (const s of site.homeSections || []) usedModules.add(s.module)
-  for (const p of site.pages || []) for (const s of p.sections || []) usedModules.add(s.module)
+  for (const p of site.pages || []) {
+    for (const s of p.sections || []) usedModules.add(s.module)
+    for (const s of p.indexSections || []) usedModules.add(s.module)
+    for (const s of p.itemSections || []) usedModules.add(s.module)
+  }
 
   for (const name of usedModules) {
     if (BASE_MODULES.includes(name) || PRO_MODULES.includes(name)) continue
@@ -224,6 +228,18 @@ async function validateModules(site, baseManifest) {
   }
   if (navStyle === 'mega' && !fs.existsSync(path.join(ROOT, 'src/components/pro/MegaNav.vue'))) {
     errors.push(`nav.style is "mega" but components/pro/MegaNav.vue isn't installed — install lodestar-pro-modules (see README), or use classic/centered/minimal`)
+  }
+
+  for (const p of site.pages || []) {
+    if (p.view !== 'collection') continue
+    const items = p.items || []
+    if (!items.length) errors.push(`collection "${p.slug}" has no items — it'll build fine, but /${p.slug} will be an empty listing`)
+    const slugs = new Set()
+    for (const item of items) {
+      if (!item.slug) { errors.push(`collection "${p.slug}" has an item with no slug ("${item.name || '?'}") — every item needs a unique slug`); continue }
+      if (slugs.has(item.slug)) errors.push(`collection "${p.slug}" has two items with slug "${item.slug}" — /${p.slug}/${item.slug} would only ever show one of them`)
+      slugs.add(item.slug)
+    }
   }
 
   if (errors.length) {
@@ -251,7 +267,17 @@ async function main() {
 
   const { site } = await import(pathToFileURL(path.join(ROOT, 'src/site.config.js')))
   const manifest = await import(pathToFileURL(path.join(ROOT, 'src/modules/manifest.js')))
-  const routes = [...new Set(site.pages.map(p => '/' + p.slug).map(r => r === '/' ? '/' : r))]
+  // Collections expand into one route per page + one per item — this is
+  // the one thing that has to happen here rather than in the router:
+  // vue-router's :itemSlug stays a genuine pattern (fast to add items,
+  // no route-list to maintain by hand), but the crawl/sitemap need real,
+  // concrete URLs, not a pattern.
+  const rawRoutes = []
+  for (const p of site.pages) {
+    rawRoutes.push(p.slug ? '/' + p.slug : '/')
+    if (p.view === 'collection') for (const item of p.items || []) if (item.slug) rawRoutes.push(`/${p.slug}/${item.slug}`)
+  }
+  const routes = [...new Set(rawRoutes)]
 
   log(`\n${C.b}✶ Lodestar${C.r} — prerender ${C.dim}(${mode})${C.r}\n`)
 

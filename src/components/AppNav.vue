@@ -48,7 +48,7 @@ const iconPosition = site.nav.iconPosition || 'left'
 
 const links = computed(() =>
   site.nav.links ||
-  site.pages.map(p => ({ label: p.name, to: '/' + p.slug }))
+  site.pages.filter(p => p.showInNav !== false).map(p => ({ label: p.name, to: '/' + p.slug }))
 )
 
 // hoverBg / hoverText / bgImage are all optional — CSS falls back to the

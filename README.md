@@ -87,7 +87,35 @@ Each entry in `pages` picks a `view`:
 ]}
 ```
 
-Nav links are derived from `pages`, so adding a page adds it to the nav.
+- **`collection`** — a listing page + one detail page per item, from a single
+  `items[]` list — a shop, a team roster, a portfolio, whatever a project
+  needs (not retail-specific despite the name). Router generates exactly two
+  routes regardless of catalog size (`/shop` and `/shop/:itemSlug`), and
+  `scripts/prerender.mjs` expands `items[]` into real URLs at build time so
+  every item still gets its own prerendered page and sitemap entry, same as
+  any other page. `indexSections` renders on the listing page with `items`
+  threaded in; `itemSections` renders on each detail page with the single
+  matched `item` threaded in — same module mechanism as `homeSections`, via
+  `SectionRenderer`'s `context` prop. Only `slug` and `name` are required per
+  item; the built-in `collectionGrid`/`itemHero`/`itemDetail` modules read
+  `image`/`price`/`tagline`/`description`/`meta`/`cta` if present, skip what
+  isn't there. See `config/pages/shop.js` for a fully worked example.
+
+  `collectionGrid` can also group the listing by any field your items
+  carry — `groupBy: 'category'` for a shop, `groupBy: 'author'` for a book
+  list, whatever fits — no fixed "category" concept, and items don't need
+  any new required field. Groups sort alphabetically by default; pass
+  `groupOrder: [...]` to pin a specific order instead. Items missing the
+  field land in an "Other" group. This is purely how the listing displays
+  — the collection is still one route, one prerendered page; nothing about
+  routing, the sitemap, or validation changes based on grouping.
+
+Nav links are derived from `pages`, so adding a page adds it to the nav — for
+a collection, that's just its index page (`/shop`); individual items were
+never nav entries. To keep a page out of the nav while it still gets a real,
+crawlable URL (a privacy policy, terms of service), set `showInNav: false`
+on it. Doesn't apply if `nav.links` is set by hand in `config/nav.js` — that
+list is already exactly what you wrote.
 
 ## Themes
 
@@ -115,7 +143,8 @@ themes by hand, update the fonts in `index.html` too.)
 Drop-in home sections in `src/modules/`, wired up in `registry.js`:
 
 `hero` · `features` · `stats` · `testimonials` · `gallery` · `menu` ·
-`pricing` · `team` · `faq` · `map` · `contact` · `cta`
+`pricing` · `team` · `faq` · `map` · `contact` · `cta` ·
+`collectionGrid` · `itemHero` · `itemDetail` (see Pages → collection)
 
 Add your own: build a `*.vue` that reads props, register it in `registry.js`,
 reference it in `homeSections`.
@@ -221,8 +250,8 @@ src/
   modules/                 swappable home sections + registry.js + manifest.js
   modules/pro/              (not in this repo — created by installing lodestar-pro-modules)
   components/              AppNav, AppFooter, ui/ContactForm
-  views/                   HomeView, PageView, ContactView, ModuleView
-  components/SectionRenderer.vue  renders a list of modules (home + module pages)
+  views/                   HomeView, PageView, ContactView, ModuleView, CollectionView, CollectionItemView
+  components/SectionRenderer.vue  renders a list of modules (home, module, and collection pages)
   composables/useAssets.js image resolver
 deploy/                    .htaccess + nginx snippet
 scripts/prerender.mjs     robots.txt + sitemap.xml + per-page prerender (runs after build)

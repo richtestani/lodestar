@@ -9,12 +9,20 @@
 
 <script setup>
 // Renders an ordered list of modules from the registry. Used by HomeView
-// (with site.homeSections) and ModuleView (with a page's `sections`).
+// (site.homeSections), ModuleView ('sections'-view pages), and
+// CollectionView/CollectionItemView ('collection'-view pages).
 import { moduleRegistry } from '@/modules/registry.js'
 import { BASE_MODULES } from '@/modules/manifest.js'
 import { moduleDefaults } from '@/site.config.js'
 
-defineProps({ sections: { type: Array, default: () => [] } })
+const props = defineProps({
+  sections: { type: Array, default: () => [] },
+  // Extra props threaded into every module in this list — e.g. a
+  // collection's `items` on its index page, or one `item` on its detail
+  // page (see CollectionView.vue / CollectionItemView.vue). A module
+  // only uses this if it declares a matching prop; harmless otherwise.
+  context: { type: Object, default: () => ({}) },
+})
 
 function moduleFor(name) {
   const c = moduleRegistry[name]
@@ -26,9 +34,11 @@ function moduleFor(name) {
   return c
 }
 
-// A module's sitewide default (config/modules/<name>.js, optional) fills
-// gaps; the instance's own props in homeSections/sections always win.
+// Precedence, lowest to highest: a module's sitewide default
+// (config/modules/<name>.js, optional) < page-supplied context
+// (items/item) < the instance's own props in homeSections/sections —
+// the more specific one always wins.
 function propsFor(section) {
-  return { ...(moduleDefaults[section.module] || {}), ...(section.props || {}) }
+  return { ...(moduleDefaults[section.module] || {}), ...props.context, ...(section.props || {}) }
 }
 </script>

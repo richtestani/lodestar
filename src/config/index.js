@@ -25,6 +25,7 @@ import { homePage, homeSections } from './home.js'
 
 import { page as aboutPage }   from './pages/about.js'
 import { page as contactPage } from './pages/contact.js'
+import { page as shopPage }    from './pages/shop.js'
 
 // Sitewide module defaults (optional) — add an import + an entry here
 // only for a module that actually needs one. See modules/README.md.
@@ -35,6 +36,6 @@ export const moduleDefaults = {
 
 export const site = {
   brand, theme, contact, social, seo, nav, footer,
-  pages: [homePage, aboutPage, contactPage],
+  pages: [homePage, aboutPage, shopPage, contactPage],
   homeSections,
 }

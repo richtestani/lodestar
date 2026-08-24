@@ -18,6 +18,9 @@ import FaqModule          from './FaqModule.vue'
 import MapModule          from './MapModule.vue'
 import ContactModule      from './ContactModule.vue'
 import CtaModule          from './CtaModule.vue'
+import CollectionGridModule from './CollectionGridModule.vue'
+import ItemHeroModule       from './ItemHeroModule.vue'
+import ItemDetailModule     from './ItemDetailModule.vue'
 
 const baseModuleRegistry = {
   hero:         HeroModule,
@@ -32,6 +35,9 @@ const baseModuleRegistry = {
   map:          MapModule,
   contact:      ContactModule,
   cta:          CtaModule,
+  collectionGrid: CollectionGridModule,
+  itemHero:       ItemHeroModule,
+  itemDetail:     ItemDetailModule,
 }
 
 // Optional — resolves to {} if modules/pro/registry.js isn't installed.
