@@ -9,3 +9,8 @@
    TYPE   --font-display --font-body --font-accent --font-mono
    FORM   --radius --maxw --nav-height --section-pad --shadow --shadow-lg
    ============================================================ */
+
+/* _tokens.css — add alongside your other :root tokens */
+:root {
+  --header-height: 72px; /* match your actual fixed header height */
+}
