@@ -14,7 +14,7 @@
 export const BASE_MODULES = [
   'hero', 'features', 'stats', 'testimonials', 'gallery',
   'menu', 'pricing', 'team', 'faq', 'map', 'contact', 'cta',
-  'collectionGrid', 'itemHero', 'itemDetail',
+  'collectionGrid', 'itemHero', 'itemDetail', 'content',
 ]
 
 export const BASE_NAV_STYLES = ['classic', 'centered', 'minimal']
