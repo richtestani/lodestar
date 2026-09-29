@@ -10,7 +10,9 @@
   aren't nav-overlap candidates the way a marketing page's hero is.
 -->
 <template>
-  <RowLayout :rows="rows" />
+  <main class="doc-layout mv-offset">
+    <RowLayout :rows="rows" />
+  </main>
 </template>
 
 <script setup>
@@ -61,3 +63,6 @@ const rows = computed(() => [
   },
 ])
 </script>
+<style scoped>
+.mv-offset { padding-top: var(--nav-height); }
+</style>
