@@ -232,8 +232,14 @@ sticky nav. Every layout works with every nav style; with `centered`, a tall
 overhang or tab covers the middle of the hero's top edge, so lower `height` or
 leave room there.
 
-The footer sits on a dark panel, so it keeps the text name unless you set
-`brand.logoImageOnDark` to a light version of the logo.
+**Footer.** The footer sits on a dark panel, so it uses
+`brand.logoImageOnDark` (a light version of the logo) when you set one.
+Otherwise it shows `brand.logoImage` on a light backing plate so a dark logo
+stays readable, and with no image at all it shows the brand name as text. The
+`minimal` footer style shows the logo centered above the legal line whenever
+there's an image. Options are `logo` in `src/config/footer.js`: `height`
+(default 44), `plate` (force the backing plate on or off), `plateColor`,
+`withText` and `show: false` to leave the logo out.
 
 ## Images
 

@@ -12,7 +12,11 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   `inline`, `overhang` (hangs past the bar's bottom edge) or `tab` (on a
   backing plate hung from the top edge), with `height`, `mobileHeight`,
   `withText` (icon mark plus name) and `shrinkOnScroll`. Works with every
-  nav style. `brand.logoImageOnDark` puts a light logo in the footer.
+  nav style.
+- **Footer logo.** The footer shows `brand.logoImageOnDark` if set,
+  otherwise `brand.logoImage` on a light backing plate, otherwise the brand
+  name. `logo` in `config/footer.js` sets `height`, `plate`, `plateColor`,
+  `withText` and `show`. The `minimal` footer style now shows the logo too.
 - Setup asks for an optional logo file (drag-and-drop paths work), copies
   it into `src/assets/images/`, and asks which layout to use.
 - `src/assets/images/` now exists in the template.

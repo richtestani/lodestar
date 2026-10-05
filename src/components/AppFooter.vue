@@ -4,9 +4,9 @@
 
       <div v-if="style === 'columns'" class="footer-grid">
         <div class="footer-brand">
-          <RouterLink to="/" class="footer-logo">
-            <img v-if="brand.logoImageOnDark" :src="asset(brand.logoImageOnDark)" :alt="brand.name" class="footer-logo-img" />
-            <template v-else>{{ brand.logoText || brand.name }}</template>
+          <RouterLink v-if="logo.show !== false" to="/" class="footer-logo" :class="{ 'has-plate': plate }" :style="logoVars">
+            <span v-if="logoImage" class="footer-logo-mark"><img :src="asset(logoImage)" :alt="withText ? '' : brand.name" class="footer-logo-img" /></span>
+            <span v-if="!logoImage || withText" class="footer-logo-text">{{ brand.logoText || brand.name }}</span>
           </RouterLink>
           <p v-if="footer.blurb" class="footer-blurb">{{ footer.blurb }}</p>
           <ul v-if="social.length" class="footer-social">
@@ -35,6 +35,11 @@
         </div>
       </div>
 
+      <RouterLink v-if="style === 'minimal' && logoImage && logo.show !== false" to="/" class="footer-logo footer-logo--minimal" :class="{ 'has-plate': plate }" :style="logoVars">
+        <span class="footer-logo-mark"><img :src="asset(logoImage)" :alt="withText ? '' : brand.name" class="footer-logo-img" /></span>
+        <span v-if="withText" class="footer-logo-text">{{ brand.logoText || brand.name }}</span>
+      </RouterLink>
+
       <div class="footer-bottom">
         <p>{{ legal }}</p>
         <p v-if="footer.fineprint" class="footer-fine">{{ footer.fineprint }}</p>
@@ -53,6 +58,18 @@ const contact = site.contact
 const social  = site.social || []
 const style   = footer.style || 'columns'
 const legal   = (footer.legal || '© {year}').replace('{year}', new Date().getFullYear())
+
+// Footer logo — see the `logo` block in config/footer.js. The image comes
+// from config/site.js: logoImageOnDark if set (made for dark panels),
+// otherwise logoImage on a light plate so a dark logo stays readable.
+const logo      = footer.logo || {}
+const logoImage = brand.logoImageOnDark || brand.logoImage || ''
+const plate     = !!logoImage && (logo.plate ?? !brand.logoImageOnDark)
+const withText  = !!logo.withText
+const logoVars  = {
+  '--footer-logo-h': `${logo.height || 44}px`,
+  ...(logo.plateColor ? { '--footer-plate': logo.plateColor } : {}),
+}
 </script>
 
 <style scoped>
@@ -62,8 +79,12 @@ const legal   = (footer.legal || '© {year}').replace('{year}', new Date().getFu
 #app-footer, #app-footer a { color: color-mix(in srgb, var(--bg) 88%, var(--text)); }
 
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2.5rem; margin-bottom: 2.5rem; }
-.footer-logo { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.12em; color: var(--primary); display: inline-block; margin-bottom: 0.9rem; }
-.footer-logo-img { display: block; height: 44px; width: auto; max-width: 220px; object-fit: contain; }
+.footer-logo { display: inline-flex; align-items: center; gap: 0.8rem; margin-bottom: 0.9rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.12em; }
+.footer-logo-mark { display: block; }
+.footer-logo-img { display: block; height: var(--footer-logo-h, 44px); width: auto; max-width: 240px; object-fit: contain; }
+/* Light backing plate so a logo made for light backgrounds reads on the dark footer */
+.has-plate .footer-logo-mark { background: var(--footer-plate, #ffffff); padding: 10px 14px; border-radius: var(--radius); }
+.footer-logo--minimal { display: flex; justify-content: center; margin: 0 auto 1.5rem; }
 .footer-blurb { font-family: var(--font-accent); font-size: 1rem; line-height: 1.7; max-width: 38ch; opacity: 0.8; }
 .footer-social { list-style: none; display: flex; gap: 1rem; margin-top: 1.1rem; }
 .footer-social a { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; }
