@@ -13,7 +13,15 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   terminals narrower than 80 columns. Colors are skipped when output isn't
   a terminal or `NO_COLOR` is set.
 - `src/themes/registry.js`: one place for each theme's label, Google
-  Fonts link and recommended home sections. Used by setup and the build.
+  Fonts link, recommended home sections and plain-English color names.
+  Used by setup and the build.
+- Setup asks whether the site needs a documentation section and explains
+  how `/docs/<file-name>` pages work. Saying no removes the placeholder
+  docs.
+- Before the accent-override question, setup shows the chosen theme's
+  colors (background, text, panels, accent, hover) with names, hex values
+  read from the theme file, and color swatches. An invalid hex is re-asked
+  instead of being silently dropped.
 
 ### Fixed
 - `theme` in `config/site.js` now actually controls the theme. Previously
@@ -22,6 +30,9 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   nothing. New `scripts/vite-plugin-theme.mjs` loads the named theme and its
   fonts at dev and build time, reloads the dev server when it changes, and
   fails the build on an unknown theme name.
+- `/docs` was registered on every site. It's now only registered when
+  `src/content/docs/` has at least one `.md` file.
+- Docs pages weren't prerendered or included in `sitemap.xml`; they are now.
 
 ### Changed
 - `src/themes/active.css` is now `src/themes/overrides.css` and holds only

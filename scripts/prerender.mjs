@@ -277,6 +277,13 @@ async function main() {
     rawRoutes.push(p.slug ? '/' + p.slug : '/')
     if (p.view === 'collection') for (const item of p.items || []) if (item.slug) rawRoutes.push(`/${p.slug}/${item.slug}`)
   }
+  // Docs: one page per .md in src/content/docs/ (same rule the router's
+  // src/docs/registry.js uses; that file needs Vite's import.meta.glob,
+  // so read the folder directly here)
+  const docsDir = path.join(ROOT, 'src/content/docs')
+  if (fs.existsSync(docsDir)) {
+    for (const f of fs.readdirSync(docsDir).sort()) if (f.endsWith('.md')) rawRoutes.push(`/docs/${f.slice(0, -3)}`)
+  }
   const routes = [...new Set(rawRoutes)]
 
   log(`\n${C.b}✶ Lodestar${C.r} — prerender ${C.dim}(${mode})${C.r}\n`)

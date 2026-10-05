@@ -62,13 +62,17 @@ for (const page of site.pages) {
   }
 }
 
-// docs section — one route per markdown file, generated from the registry
-routes.push({
-  path: '/docs',
-  component: DocLayout,
-  redirect: docsRegistry[0]?.path,
-  children: docRoutes,
-})
+// docs section — one route per markdown file in src/content/docs/.
+// Only registered when there's at least one doc, so a site without docs
+// has no /docs at all (it falls through to the catch-all below).
+if (docsRegistry.length) {
+  routes.push({
+    path: '/docs',
+    component: DocLayout,
+    redirect: docsRegistry[0].path,
+    children: docRoutes,
+  })
+}
 
 // Catch-all → home (must stay last, after all real routes are registered)
 routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })

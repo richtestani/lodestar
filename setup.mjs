@@ -117,6 +117,39 @@ function onColor(hex) {
   return lum > 0.6 ? '#10100f' : '#ffffff'
 }
 
+// ── Theme color preview ─────────────────────────────────────
+// Hex values come straight from src/themes/<theme>.css; the names come
+// from registry.js. Swatches use 24-bit color when the terminal has color.
+const COLOR_ROWS = [
+  ['bg',        'Background'],
+  ['text',      'Text'],
+  ['surface-2', 'Footer & dark panels'],
+  ['primary',   'Accent (buttons, links)'],
+  ['primary-2', 'Accent hover'],
+]
+function themeColors(theme) {
+  const css = fs.readFileSync(path.join(TEMPLATE_DIR, 'src/themes', `${theme}.css`), 'utf8')
+  const hex = {}
+  for (const [, k, v] of css.matchAll(/--([\w-]+):\s*(#[0-9a-f]{3,8})\b/gi)) hex[k] ??= v.toLowerCase()
+  return hex
+}
+function swatch(hex) {
+  if (!COLOR || !/^#[0-9a-f]{6}$/i.test(hex)) return ''
+  const n = parseInt(hex.slice(1), 16)
+  return `\x1b[48;2;${(n >> 16) & 255};${(n >> 8) & 255};${n & 255}m    ${C.r} `
+}
+function showThemeColors(theme) {
+  const hex = themeColors(theme), names = THEME_REGISTRY[theme]?.colors || {}
+  const w = Math.max(...COLOR_ROWS.map(([, l]) => l.length))
+  log(`\n${C.c}The ${C.b}${theme}${C.r}${C.c} colors:${C.r}`)
+  for (const [k, label] of COLOR_ROWS) {
+    if (!hex[k]) continue
+    const mark = k === 'primary' ? `  ${C.y}← the accent you can override${C.r}` : ''
+    log(`  ${swatch(hex[k])}${label.padEnd(w)}  ${C.dim}${hex[k]}${C.r}  ${names[k] || ''}${mark}`)
+  }
+  return { hex, names }
+}
+
 // ── Module starter content (so the generated site renders) ──
 function starters(brand) {
   return {
@@ -249,12 +282,33 @@ async function main() {
   const navStyle    = ['classic','centered','minimal'][await askChoice('Navigation style', NAV_STYLES, 0)]
 
   let accent = ''
-  if (!AUTO && await askYN(`Override the ${theme} accent color?`, false)) {
-    accent = await ask('Accent hex (e.g. #c0392b)', '')
+  if (!AUTO) {
+    const { hex, names } = showThemeColors(theme)
+    const current = [names.primary, hex.primary].filter(Boolean).join(' ')
+    log(`${C.dim}  Overriding swaps the accent for your brand color everywhere it's used;`)
+    log(`  the hover shade and button text color are worked out from it. The rest stays.${C.r}`)
+    if (await askYN(`Replace the ${theme} accent (${current}) with your own color?`, false)) {
+      while (true) {
+        const a = (await ask('Accent hex, e.g. #c0392b (blank to keep the theme accent)', '')).trim()
+        if (!a || /^#?[0-9a-f]{6}$/i.test(a)) { accent = a; break }
+        log(`${C.y}  "${a}" isn't a 6-digit hex color, try again.${C.r}`)
+      }
+    }
   }
 
   const about       = await askYN('Include an About page?', true)
   const contactPage = await askYN('Include a Contact page?', true)
+
+  if (!AUTO) {
+    log(`\n${C.c}Documentation section${C.r}`)
+    log(`${C.dim}  Each Markdown file in src/content/docs/ becomes a page at /docs/<file-name>,`)
+    log(`  e.g. getting-started.md → /docs/getting-started. Docs pages get a sidebar`)
+    log(`  listing every doc and an "on this page" contents list; /docs opens the first`)
+    log("  one (order them with `order:` in each file's frontmatter). Good for manuals,")
+    log(`  help centers and policies; most business sites don't need it. If you skip it,`)
+    log(`  /docs won't exist, and you can add it later by dropping a .md file in that folder.${C.r}`)
+  }
+  const docs        = await askYN('Include a documentation section?', false)
 
   let modules = RECOMMENDED[theme]
   if (!AUTO && !await askYN(`Use the recommended home sections for "${theme}" (${RECOMMENDED[theme].join(', ')})?`, true)) {
@@ -270,7 +324,7 @@ async function main() {
   const formspree = await ask('Formspree endpoint (optional)', '')
   const siteUrl   = (await ask('Production site URL (e.g. https://acmestudio.com)', 'https://example.com')).replace(/\/+$/, '')
 
-  const answers = { projectName, brandName, tagline, theme, navStyle, about, contactPage, modules, email, phone, address, formspree, siteUrl }
+  const answers = { projectName, brandName, tagline, theme, navStyle, about, contactPage, docs, modules, email, phone, address, formspree, siteUrl }
 
   // Write everything
   const dest = path.resolve(TEMPLATE_DIR, '..', projectName)
@@ -310,8 +364,14 @@ async function main() {
       `   chosen in src/config/site.js. These stay when you switch themes;\n` +
       `   delete the block to get the theme's own accent back. */\n` +
       `:root {\n  --primary:    ${hex};\n  --primary-2:  ${darken(hex)};\n  --on-primary: ${onColor(hex)};\n}\n`)
-  } else if (accent) {
-    log(`${C.y}! "${accent}" isn't a 6-digit hex color — keeping the ${theme} accent.${C.r}`)
+  }
+
+  // docs — the template ships placeholder docs. No docs: remove them;
+  // the router only registers /docs when this folder has .md files.
+  const docsDir = path.join(dest, 'src/content/docs')
+  if (!docs) {
+    for (const f of fs.readdirSync(docsDir)) if (f.endsWith('.md')) fs.rmSync(path.join(docsDir, f))
+    fs.writeFileSync(path.join(docsDir, '.gitkeep'), '')
   }
 
   // index.html — title + description (fonts are injected at dev/build
@@ -343,6 +403,11 @@ async function main() {
     `Switch the look by changing \`theme\` in **src/config/site.js** (${THEMES.join(', ')}); ` +
     `colors, type and fonts all follow. Per-site tweaks like an accent color go in **src/themes/overrides.css**. ` +
     `Drop images into **src/assets/images/**.\n\n` +
+    (docs
+      ? `Docs live in **src/content/docs/**: each .md file is a page at /docs/<file-name> ` +
+        `(\`title:\` and \`order:\` in its frontmatter). Replace the placeholders with real ones.\n\n`
+      : `To add a docs section later, put a Markdown file in **src/content/docs/**; ` +
+        `it becomes /docs/<file-name> and /docs appears automatically.\n\n`) +
     `## Build & deploy\n\n\`\`\`\nnpm run build   # outputs to /public\n\`\`\`\n\n` +
     `Upload /public to your host. For SPA routing, copy **deploy/.htaccess** (Apache/Bluehost) ` +
     `into the web root, or use the Nginx rule in **deploy/nginx.conf.txt** (Forge/Vultr).\n\n` +
@@ -352,7 +417,7 @@ async function main() {
 
   rl?.close()
   log(`\n${C.g}✓ Done.${C.r}\n`)
-  log(`${C.b}${projectName}${C.r} created with the ${C.b}${theme}${C.r} theme, ${C.b}${navStyle}${C.r} nav, ${modules.length} home sections.\n`)
+  log(`${C.b}${projectName}${C.r} created with the ${C.b}${theme}${C.r} theme, ${C.b}${navStyle}${C.r} nav, ${modules.length} home sections${docs ? ', and a /docs section' : ''}.\n`)
   log('Next:')
   log(`  ${C.c}cd ../${projectName}${C.r}`)
   log(`  ${C.c}npm install${C.r}`)

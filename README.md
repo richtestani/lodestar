@@ -117,6 +117,20 @@ crawlable URL (a privacy policy, terms of service), set `showInNav: false`
 on it. Doesn't apply if `nav.links` is set by hand in `config/nav.js` — that
 list is already exactly what you wrote.
 
+## Docs (optional)
+
+A documentation section for manuals, help centers or policies. Each Markdown
+file in `src/content/docs/` becomes a page at `/docs/<file-name>`
+(`getting-started.md` → `/docs/getting-started`), rendered with a sidebar of all
+docs and an "on this page" list built from its `##`/`###` headings. `/docs`
+redirects to the first doc. Set `title:` and `order:` in each file's frontmatter.
+
+Setup asks whether a site needs docs. If not, it removes the placeholder docs,
+and with no `.md` files in that folder the router doesn't register `/docs` at
+all, so the URL behaves like any other unknown path. To add docs later, drop a
+`.md` file in `src/content/docs/`. Docs pages are prerendered and listed in the
+sitemap like every other page.
+
 ## Themes
 
 Four token-based base styles. A theme is just a set of CSS variables in
