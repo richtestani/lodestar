@@ -21,13 +21,14 @@
 // ============================================================
 import { createRouter, createWebHistory } from 'vue-router'
 import { site } from '@/site.config.js'
-import { applySeo } from '@/composables/useSeo.js'
+import { applySeo, applyNotFoundSeo } from '@/composables/useSeo.js'
 import HomeView           from '@/views/HomeView.vue'
 import ContactView        from '@/views/ContactView.vue'
 import PageView           from '@/views/PageView.vue'
 import RowsPageView       from '@/views/RowsPageView.vue'
 import CollectionView     from '@/views/CollectionView.vue'
 import CollectionItemView from '@/views/CollectionItemView.vue'
+import NotFoundView       from '@/views/NotFoundView.vue'
 import { docsRegistry } from '@/docs/registry'
 import DocLayout from '@/layouts/DocLayout.vue'
 
@@ -74,8 +75,9 @@ if (docsRegistry.length) {
   })
 }
 
-// Catch-all → home (must stay last, after all real routes are registered)
-routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
+// Catch-all → Not Found page (must stay last, after all real routes).
+// The build also saves it as public/404.html; see scripts/prerender.mjs.
+routes.push({ path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView })
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -83,18 +85,21 @@ const router = createRouter({
   scrollBehavior() { return { top: 0 } },
 })
 
-// Dev-only warning: distinguishes "no matching route" (a site.pages/nav
-// config issue) from a genuinely broken page, since both currently
-// redirect to home and look identical without this.
+// Dev-only hint: a nav link or page that lands on Not Found is usually a
+// slug mismatch in config/, not a missing page.
 router.beforeEach((to) => {
-  if (import.meta.env.DEV && to.matched.length === 1 && to.matched[0].path === '/:pathMatch(.*)*') {
-    console.warn(`[router] No matching route for "${to.fullPath}" — redirecting to home. Check site.pages in site.config.js.`)
+  if (import.meta.env.DEV && to.name === 'not-found') {
+    console.warn(`[router] No page matches "${to.fullPath}", showing Not Found. If it should exist, check the slugs in src/config/.`)
   }
 })
 
 // Keep <title>, meta description, and OG/Twitter tags in sync with
 // the page navigated to — see composables/useSeo.js.
 router.afterEach(to => {
+  if (to.name === 'not-found') {
+    applyNotFoundSeo()
+    return
+  }
   const routeName = String(to.name || '')
   if (routeName.endsWith('-item')) {
     const collection = site.pages.find(p => (p.slug || 'home') === routeName.slice(0, -5) && p.view === 'collection')

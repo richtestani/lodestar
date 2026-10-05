@@ -224,9 +224,22 @@ npm run build           # vite build + prerender → outputs to /public
 npm run build:staging   # same, using .env.staging
 ```
 
-Upload `/public` to the host. For SPA history-mode routing:
+Upload `/public` to the host, then set up routing:
 - **Apache / Bluehost** — copy `deploy/.htaccess` into the web root.
-- **Nginx / Forge** — use the `try_files` rule in `deploy/nginx.conf.txt`.
+- **Nginx / Forge** — use the `location` and `error_page` rules in `deploy/nginx.conf.txt`.
+
+Both serve each prerendered page as a plain file and return the site's own
+Not Found page (`public/404.html`) with a real 404 status for anything else.
+If prerendering can't run on your build machine, each config has a
+commented-out fallback that sends unknown paths to the app instead.
+
+### Not Found page
+
+Any URL that isn't a page shows `src/views/NotFoundView.vue`: a large 404 in
+the theme's accent, a heading, a button home, and links to the nav's pages.
+It's styled only with theme tokens, so it matches whichever theme is active.
+The wording is `notFound` in `src/config/site.js`. The build saves it as
+`public/404.html` with `noindex`, so search engines don't index broken links.
 
 `.env.staging` sets `noindex`, `.env.production` sets `index` (via the
 `%VITE_ROBOTS%` token in `index.html`).

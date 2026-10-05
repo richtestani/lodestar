@@ -186,6 +186,16 @@ async function prerenderRoutes(routes, baseUrl) {
       log(`${C.g}✓${C.r} ${route === '/' ? '/' : route + '/'} ${C.dim}→ ${path.relative(ROOT, outPath)}${C.r}`)
       await page.close()
     }
+
+    // 404.html: the app's Not Found page, rendered for a path no page
+    // uses. Servers return it, with a 404 status, for any URL that isn't
+    // a file (see deploy/). Overwrites the app-shell copy main() wrote.
+    const page = await browser.newPage()
+    await page.goto(baseUrl + '/__lodestar-not-found__', { waitUntil: 'networkidle0' })
+    await page.waitForSelector('#app', { timeout: 5000 }).catch(() => {})
+    fs.writeFileSync(path.join(OUT_DIR, '404.html'), await page.content())
+    log(`${C.g}✓${C.r} Not Found page ${C.dim}→ public/404.html${C.r}`)
+    await page.close()
   } finally {
     await browser.close()
   }
@@ -291,12 +301,23 @@ async function main() {
   await validateModules(site, manifest)
   writeSeoFiles(routes)
 
+  // Fallback 404.html: a copy of the plain app shell, written before any
+  // prerendering so it's always there. Real routes then still load if
+  // prerendering is skipped (no browser), just with a 404 status; when
+  // prerendering runs, it's replaced with the rendered Not Found page.
+  fs.copyFileSync(path.join(OUT_DIR, 'index.html'), path.join(OUT_DIR, '404.html'))
+
   const server = await startServer()
   const port = server.address().port
   const prerendered = await prerenderRoutes(routes, `http://127.0.0.1:${port}`)
   server.close()
 
   log(`\n${C.g}Done.${C.r} ${prerendered} of ${routes.length} route(s) prerendered.\n`)
+  if (!prerendered) {
+    log(`${C.y}! Without prerendering, every page except / is only reachable through public/404.html,`)
+    log(`  so those pages load fine but are served with a 404 status. Fix the browser issue above`)
+    log(`  before deploying a live site.${C.r}\n`)
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

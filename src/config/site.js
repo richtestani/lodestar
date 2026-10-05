@@ -43,3 +43,13 @@ export const seo = {
   titleSuffix:       ' — Dovetail & Co.',   // appended to a page's title unless it sets its own
   defaultDescription: 'Small-batch homewares, made by hand and built to last.',
 }
+
+// The Not Found page: shown for any URL that isn't a page, and saved as
+// public/404.html at build so the server can return a real 404 (see
+// deploy/). It's styled by the theme and also lists the nav's pages.
+export const notFound = {
+  eyebrow: 'Page not found',
+  title:   "We couldn't find that page.",
+  text:    'The link may be out of date, or the address may have a typo.',
+  cta:     { label: 'Back to home', to: '/' },
+}

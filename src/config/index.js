@@ -18,7 +18,7 @@
 // Home is assembled separately (see home.js for why); every other page
 // gets one file in pages/ and one line each below.
 // ============================================================
-import { brand, theme, contact, social, seo } from './site.js'
+import { brand, theme, contact, social, seo, notFound } from './site.js'
 import { nav } from './nav.js'
 import { footer } from './footer.js'
 import { homePage, homeSections } from './home.js'
@@ -35,7 +35,7 @@ export const moduleDefaults = {
 }
 
 export const site = {
-  brand, theme, contact, social, seo, nav, footer,
+  brand, theme, contact, social, seo, notFound, nav, footer,
   pages: [homePage, aboutPage, shopPage, contactPage],
   homeSections,
 }

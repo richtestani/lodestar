@@ -23,6 +23,14 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   read from the theme file, and color swatches. An invalid hex is re-asked
   instead of being silently dropped.
 
+- **Not Found page** (`src/views/NotFoundView.vue`) for any URL that isn't
+  a page, styled entirely by theme tokens, with wording in `notFound` in
+  `config/site.js` and links to the nav's pages. Tagged `noindex`.
+- The build writes `public/404.html` (the rendered Not Found page), and
+  `deploy/.htaccess` and `deploy/nginx.conf.txt` serve it with a real 404
+  status instead of sending every unknown URL to the app. Each keeps the
+  old SPA fallback commented out for hosts where prerendering can't run.
+
 ### Fixed
 - `theme` in `config/site.js` now actually controls the theme. Previously
   it was never read: the look came from an `@import` in `active.css` and
@@ -32,6 +40,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   fails the build on an unknown theme name.
 - `/docs` was registered on every site. It's now only registered when
   `src/content/docs/` has at least one `.md` file.
+- Unknown URLs silently redirected to the home page (with a 200 status).
+  They now show the Not Found page.
 - Docs pages weren't prerendered or included in `sitemap.xml`; they are now.
 
 ### Changed
@@ -42,7 +52,9 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   `active.css` imported, move any `:root` overrides from `active.css` into
   `overrides.css`, and copy over `scripts/vite-plugin-theme.mjs`,
   `src/themes/registry.js`, and the changes to `vite.config.js`, `main.js`
-  and `App.vue`.
+  and `App.vue`. For the Not Found page, copy `NotFoundView.vue`, the
+  router/`useSeo.js`/`prerender.mjs` changes and the new `deploy/` files;
+  `notFound` in `site.js` is optional (the view has defaults).
 
 ## [0.4.0] — 2026-08-23
 

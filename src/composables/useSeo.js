@@ -14,6 +14,12 @@ import { site } from '@/site.config.js'
 
 const SITE_URL = (import.meta.env.VITE_SITE_URL || '').replace(/\/+$/, '')
 
+// The robots value index.html shipped with (from VITE_ROBOTS), so a real
+// page can restore it after the visitor passes through Not Found
+const ROBOTS = typeof document !== 'undefined'
+  ? document.head.querySelector('meta[name="robots"]')?.getAttribute('content') || ''
+  : ''
+
 function upsertMeta(attr, key, content) {
   if (!content) return
   let el = document.head.querySelector(`meta[${attr}="${key}"]`)
@@ -38,6 +44,7 @@ function upsertLink(rel, href) {
 
 export function applySeo(page) {
   if (!page) return
+  upsertMeta('name', 'robots', ROBOTS)
   const seo = site.seo || {}
   const title = page.seo?.title || `${page.name}${seo.titleSuffix || ''}`
   const description = page.seo?.description || seo.defaultDescription || site.brand?.tagline || ''
@@ -57,4 +64,16 @@ export function applySeo(page) {
     upsertMeta('property', 'og:url', url)
     upsertLink('canonical', url)
   }
+}
+
+// Not Found: never index it, and no canonical (it isn't a real URL)
+export function applyNotFoundSeo() {
+  const seo = site.seo || {}
+  const title = `Page not found${seo.titleSuffix || ''}`
+  document.title = title
+  upsertMeta('name', 'robots', 'noindex, follow')
+  upsertMeta('property', 'og:title', title)
+  upsertMeta('name', 'twitter:title', title)
+  document.head.querySelector('link[rel="canonical"]')?.remove()
+  document.head.querySelector('meta[property="og:url"]')?.remove()
 }

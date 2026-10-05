@@ -25,7 +25,20 @@ add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), interes
 # if you add analytics, a different form host, etc.
 add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://www.google.com https://maps.google.com; connect-src 'self' https://formspree.io; form-action 'self' https://formspree.io; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests" always;
 
-# SPA history-mode routing
+# Routing + Not Found. `npm run build` writes every page as its own
+# <page>/index.html, so pages are served as plain files. Anything else
+# gets the site's Not Found page (public/404.html) with a real 404 status.
 location / {
-    try_files $uri $uri/ /index.html;
+    try_files $uri $uri/ =404;
 }
+error_page 404 /404.html;
+location = /404.html {
+    internal;
+}
+
+# Only if prerendering can't run on your build machine (the build warns
+# "0 of N routes prerendered"): use this instead of the block above, so
+# unknown paths go to the app. Not Found still shows, with a 200 status.
+# location / {
+#     try_files $uri $uri/ /index.html;
+# }
