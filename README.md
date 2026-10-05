@@ -211,6 +211,30 @@ If a page or nav config references a premium module/style that isn't
 installed, `npm run build` fails with a clear message rather than shipping a
 page with a silently-missing section or a silently-downgraded nav.
 
+## Logo
+
+Set `brand.logoImage` in `src/config/site.js` to a file in
+`src/assets/images/` (SVG or PNG work best) and it replaces the brand name in
+the nav. Setup asks for one and copies it in for you; you can drag the file
+into the terminal. How it sits is `logo` in `src/config/nav.js`:
+
+| `display`  | look |
+|------------|------|
+| `inline`   | fits inside the bar (default) |
+| `overhang` | larger, hangs past the bar's bottom edge |
+| `tab`      | overhang on a backing plate hung from the top edge; legible over any hero image |
+
+Options: `height` (px; default 36 inline, 96 otherwise), `mobileHeight` (default
+about two thirds of `height`), `withText: true` to show `brand.logoText` beside
+the image (an icon mark plus the name), and `shrinkOnScroll` (default true):
+overhang and tab logos tuck back into the bar once the page scrolls, on a
+sticky nav. Every layout works with every nav style; with `centered`, a tall
+overhang or tab covers the middle of the hero's top edge, so lower `height` or
+leave room there.
+
+The footer sits on a dark panel, so it keeps the text name unless you set
+`brand.logoImageOnDark` to a light version of the logo.
+
 ## Images
 
 Put files in `src/assets/images/` and reference them by filename in the config

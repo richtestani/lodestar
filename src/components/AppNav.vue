@@ -1,12 +1,15 @@
 <template>
   <nav
     id="main-nav"
-    :class="[`nav--${style}`, { 'is-sticky': sticky, 'is-open': menuOpen }]"
+    :class="[`nav--${style}`, `logo--${logoDisplay}`, {
+      'is-sticky': sticky, 'is-open': menuOpen, 'is-scrolled': scrolled,
+      'logo--shrinks': shrinks,
+    }]"
     :style="navStyleVars"
   >
-    <RouterLink to="/" class="nav-logo" @click="close">
-      <img v-if="logoImage" :src="asset(logoImage)" :alt="brand.name" class="nav-logo-img" />
-      <span v-else>{{ brand.logoText || brand.name }}</span>
+    <RouterLink to="/" class="nav-logo" :class="{ 'has-image': logoImage }" :aria-label="logoImage && !logo.withText ? brand.name : undefined" @click="close">
+      <img v-if="logoImage" :src="asset(logoImage)" :alt="logo.withText ? '' : brand.name" class="nav-logo-img" />
+      <span v-if="!logoImage || logo.withText" class="nav-logo-text">{{ brand.logoText || brand.name }}</span>
     </RouterLink>
 
     <button
@@ -36,7 +39,7 @@
 // classic | centered | minimal. For a nested/dropdown mega nav, see
 // lodestar-pro-modules' MegaNav.vue (set nav.style: 'mega') — this
 // component only ever renders flat top-level links.
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { site } from '@/site.config.js'
 import { asset } from '@/composables/useAssets.js'
 
@@ -46,6 +49,24 @@ const style     = site.nav.style || 'classic'
 const sticky    = site.nav.sticky !== false
 const iconPosition = site.nav.iconPosition || 'left'
 
+// Logo image layout — see the `logo` block in config/nav.js. Only applies
+// when brand.logoImage is set; a text logo always sits inline.
+const LOGO_DISPLAYS = ['inline', 'overhang', 'tab']
+const logo = site.nav.logo || {}
+const logoDisplay = logoImage && LOGO_DISPLAYS.includes(logo.display) ? logo.display : 'inline'
+if (import.meta.env.DEV && logo.display && !LOGO_DISPLAYS.includes(logo.display)) {
+  console.warn(`[lodestar] nav.logo.display "${logo.display}" isn't one of ${LOGO_DISPLAYS.join(', ')}, using inline`)
+}
+const logoHeight = logo.height || (logoDisplay === 'inline' ? 36 : 96)
+const logoMobileHeight = logo.mobileHeight || (logoDisplay === 'inline' ? Math.min(logoHeight, 32) : Math.round(logoHeight * 0.65))
+// Overhanging logos tuck back into the bar once the page scrolls (sticky nav only)
+const shrinks = logoDisplay !== 'inline' && sticky && logo.shrinkOnScroll !== false
+
+const scrolled = ref(false)
+const onScroll = () => { scrolled.value = window.scrollY > 24 }
+onMounted(() => { if (shrinks) { onScroll(); window.addEventListener('scroll', onScroll, { passive: true }) } })
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
 const links = computed(() =>
   site.nav.links ||
   site.pages.filter(p => p.showInNav !== false).map(p => ({ label: p.name, to: '/' + p.slug }))
@@ -54,7 +75,7 @@ const links = computed(() =>
 // hoverBg / hoverText / bgImage are all optional — CSS falls back to the
 // theme's own colors/transparent background when unset.
 const navStyleVars = computed(() => {
-  const v = {}
+  const v = { '--logo-h': `${logoHeight}px`, '--logo-h-mobile': `${logoMobileHeight}px` }
   if (site.nav.hoverBg)   v['--nav-hover-bg']   = site.nav.hoverBg
   if (site.nav.hoverText) v['--nav-hover-text'] = site.nav.hoverText
   if (site.nav.bgImage)   v['--nav-bg-image']   = `url(${asset(site.nav.bgImage)})`
@@ -80,8 +101,37 @@ onUnmounted(() => { document.body.style.overflow = '' })
 }
 #main-nav.is-sticky { position: fixed; }
 
-.nav-logo { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.12em; color: var(--primary); flex-shrink: 0; }
-.nav-logo-img { height: 34px; width: auto; }
+.nav-logo {
+  display: inline-flex; align-items: center; gap: 0.7rem; flex-shrink: 0; position: relative; z-index: 2;
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.12em; color: var(--primary);
+}
+.nav-logo-img { display: block; width: auto; max-width: 260px; object-fit: contain; transition: height 0.25s ease; }
+
+/* ── Logo layouts (nav.logo.display) ────────────────────────
+   inline   — fits inside the bar
+   overhang — taller than the bar, hangs past its bottom edge
+   tab      — overhang on a backing plate hung from the top edge   */
+.logo--inline .nav-logo-img { height: min(var(--logo-h), calc(var(--nav-height) - 18px)); }
+
+.logo--overhang .nav-logo,
+.logo--tab .nav-logo { align-self: flex-start; transition: padding 0.25s ease, margin 0.25s ease, box-shadow 0.25s ease; }
+.logo--overhang .nav-logo { margin-top: 12px; }
+.logo--overhang .nav-logo-img,
+.logo--tab .nav-logo-img { height: var(--logo-h); }
+.logo--overhang .nav-logo-img { filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.18)); }
+
+.logo--tab .nav-logo {
+  padding: 14px 18px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border); border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Shrink on scroll: settle back inside the bar */
+.logo--shrinks.is-scrolled .nav-logo { align-self: center; margin-top: 0; }
+.logo--shrinks.is-scrolled .nav-logo-img { height: calc(var(--nav-height) - 20px); filter: none; }
+.logo--tab.logo--shrinks.is-scrolled .nav-logo { padding-block: 0; background: transparent; border-color: transparent; box-shadow: none; }
 
 .nav-links { display: flex; align-items: center; gap: 0.25rem; list-style: none; }
 .nav-link {
@@ -100,7 +150,10 @@ onUnmounted(() => { document.body.style.overflow = '' })
 
 /* CENTERED: logo absolutely centered, links pushed right */
 .nav--centered .nav-logo { position: absolute; left: 50%; transform: translateX(-50%); }
-.nav--centered { justify-content: flex-end; }
+#main-nav.nav--centered { justify-content: flex-end; } /* #id beats the base rule */
+.nav--centered.logo--tab .nav-logo { top: 0; }
+.nav--centered.logo--overhang .nav-logo { top: 0; }
+.nav--centered.logo--shrinks.is-scrolled .nav-logo { top: 50%; transform: translate(-50%, -50%); }
 
 /* MINIMAL: burger shows on desktop too, links become the drawer */
 .nav--minimal .nav-links { position: fixed; }
@@ -133,6 +186,12 @@ onUnmounted(() => { document.body.style.overflow = '' })
 @media (max-width: 768px) {
   .nav-burger { display: flex; }
   .nav--centered .nav-logo { position: static; transform: none; }
+  .logo--inline .nav-logo-img { height: min(var(--logo-h-mobile), calc(var(--nav-height) - 18px)); }
+  .logo--overhang .nav-logo-img,
+  .logo--tab .nav-logo-img { height: var(--logo-h-mobile); }
+  .logo--tab .nav-logo { padding: 10px 12px 12px; }
+  .logo--overhang .nav-logo { margin-top: 10px; }
+  .nav-logo-text { font-size: 1rem; }
   .nav-links {
     position: fixed; top: 0; right: 0; width: min(340px, 86vw); height: 100dvh;
     flex-direction: column; align-items: stretch; gap: 0;

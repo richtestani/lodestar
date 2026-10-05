@@ -4,7 +4,10 @@
 
       <div v-if="style === 'columns'" class="footer-grid">
         <div class="footer-brand">
-          <RouterLink to="/" class="footer-logo">{{ brand.logoText || brand.name }}</RouterLink>
+          <RouterLink to="/" class="footer-logo">
+            <img v-if="brand.logoImageOnDark" :src="asset(brand.logoImageOnDark)" :alt="brand.name" class="footer-logo-img" />
+            <template v-else>{{ brand.logoText || brand.name }}</template>
+          </RouterLink>
           <p v-if="footer.blurb" class="footer-blurb">{{ footer.blurb }}</p>
           <ul v-if="social.length" class="footer-social">
             <li v-for="s in social" :key="s.label">
@@ -43,6 +46,7 @@
 
 <script setup>
 import { site } from '@/site.config.js'
+import { asset } from '@/composables/useAssets.js'
 const brand   = site.brand
 const footer  = site.footer
 const contact = site.contact
@@ -59,6 +63,7 @@ const legal   = (footer.legal || '© {year}').replace('{year}', new Date().getFu
 
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2.5rem; margin-bottom: 2.5rem; }
 .footer-logo { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.12em; color: var(--primary); display: inline-block; margin-bottom: 0.9rem; }
+.footer-logo-img { display: block; height: 44px; width: auto; max-width: 220px; object-fit: contain; }
 .footer-blurb { font-family: var(--font-accent); font-size: 1rem; line-height: 1.7; max-width: 38ch; opacity: 0.8; }
 .footer-social { list-style: none; display: flex; gap: 1rem; margin-top: 1.1rem; }
 .footer-social a { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; }

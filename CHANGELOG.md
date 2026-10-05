@@ -8,6 +8,14 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Logo layouts.** `logo` in `config/nav.js` places `brand.logoImage` as
+  `inline`, `overhang` (hangs past the bar's bottom edge) or `tab` (on a
+  backing plate hung from the top edge), with `height`, `mobileHeight`,
+  `withText` (icon mark plus name) and `shrinkOnScroll`. Works with every
+  nav style. `brand.logoImageOnDark` puts a light logo in the footer.
+- Setup asks for an optional logo file (drag-and-drop paths work), copies
+  it into `src/assets/images/`, and asks which layout to use.
+- `src/assets/images/` now exists in the template.
 - `setup.mjs` opens with a pixel-art LodeStar banner (`##` pixels, `**`
   shadow) and a welcome message. It falls back to a compact version on
   terminals narrower than 80 columns. Colors are skipped when output isn't
@@ -32,6 +40,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   old SPA fallback commented out for hosts where prerendering can't run.
 
 ### Fixed
+- The `centered` nav style showed its links on the left; the rule pushing
+  them right was outranked by the base nav rule. They now sit on the right.
 - `theme` in `config/site.js` now actually controls the theme. Previously
   it was never read: the look came from an `@import` in `active.css` and
   fonts were hardcoded into `index.html` by setup, so editing `theme` did

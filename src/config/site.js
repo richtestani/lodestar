@@ -12,7 +12,8 @@ export const brand = {
   name:      'Dovetail & Co.',
   tagline:   'Considered goods for everyday rituals.',
   logoText:  'Dovetail',     // text logo (used when logoImage is empty)
-  logoImage: '',              // optional: a filename in src/assets/images/
+  logoImage: '',              // optional: a filename in src/assets/images/ (SVG or PNG); layout options are in nav.js
+  logoImageOnDark: '',        // optional: a light version for dark backgrounds (used in the footer)
 }
 
 // Visual identity lives in src/themes/<theme>.css. Change this any time:

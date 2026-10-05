@@ -7,6 +7,19 @@ export const nav = {
   style:  'classic',          // classic | centered | minimal | mega (mega needs lodestar-pro-modules installed — see README)
   sticky: true,
 
+  // Logo layout — only used when brand.logoImage (config/site.js) is set;
+  // a text logo always sits inline. Delete the block for the defaults.
+  logo: {
+    display: 'inline',        // 'inline'   fits inside the bar
+                              // 'overhang' larger, hangs past the bar's bottom edge
+                              // 'tab'      overhang on a backing plate hung from the top
+                              //            edge; stays legible over any hero image
+    // height:       96,      // px. Default 36 for inline (capped to fit the bar), 96 otherwise
+    // mobileHeight: 62,      // px at phone width. Default: about 2/3 of height
+    // withText:     true,    // show brand.logoText beside the image (icon mark + name)
+    // shrinkOnScroll: false, // overhang/tab tuck into the bar once you scroll (sticky only); default true
+  },
+
   // Shared across every style (classic/centered/minimal/mega):
   // hoverBg:      '#f4efe6',        // link background on hover — omit for transparent
   // hoverText:    '#c0392b',        // link text color on hover — omit to use the theme's --primary
