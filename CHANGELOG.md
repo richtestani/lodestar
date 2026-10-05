@@ -7,6 +7,32 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased]
 
+### Added
+- `setup.mjs` opens with a pixel-art LodeStar banner (`##` pixels, `**`
+  shadow) and a welcome message. It falls back to a compact version on
+  terminals narrower than 80 columns. Colors are skipped when output isn't
+  a terminal or `NO_COLOR` is set.
+- `src/themes/registry.js`: one place for each theme's label, Google
+  Fonts link and recommended home sections. Used by setup and the build.
+
+### Fixed
+- `theme` in `config/site.js` now actually controls the theme. Previously
+  it was never read: the look came from an `@import` in `active.css` and
+  fonts were hardcoded into `index.html` by setup, so editing `theme` did
+  nothing. New `scripts/vite-plugin-theme.mjs` loads the named theme and its
+  fonts at dev and build time, reloads the dev server when it changes, and
+  fails the build on an unknown theme name.
+
+### Changed
+- `src/themes/active.css` is now `src/themes/overrides.css` and holds only
+  per-site token tweaks (setup's accent override goes here). It's layered
+  on top of the active theme and stays put when you switch.
+  **Existing sites:** set `theme` in `config/site.js` to the theme your
+  `active.css` imported, move any `:root` overrides from `active.css` into
+  `overrides.css`, and copy over `scripts/vite-plugin-theme.mjs`,
+  `src/themes/registry.js`, and the changes to `vite.config.js`, `main.js`
+  and `App.vue`.
+
 ## [0.4.0] — 2026-08-23
 
 ### Added

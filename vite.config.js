@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import svgLoader from 'vite-svg-loader'
+import lodestarTheme from './scripts/vite-plugin-theme.mjs'
 import { fileURLToPath, URL } from 'node:url'
 
 import Markdown from 'unplugin-vue-markdown/vite'
@@ -23,7 +24,8 @@ export default defineConfig({
           })
         },
       }),
-	  svgLoader()
+	  svgLoader(),
+	  lodestarTheme(), // theme + fonts come from `theme` in src/config/site.js
   ],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },

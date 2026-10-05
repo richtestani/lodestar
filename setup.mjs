@@ -11,13 +11,70 @@ import { stdin, stdout } from 'node:process'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
 import path from 'node:path'
+import { THEMES as THEME_REGISTRY, DEFAULT_THEME } from './src/themes/registry.js'
 
 const TEMPLATE_DIR = path.dirname(fileURLToPath(import.meta.url))
 const AUTO = process.argv.includes('--yes')
 const rl = AUTO ? null : createInterface({ input: stdin, output: stdout })
 
-const C = { dim:'\x1b[2m', b:'\x1b[1m', g:'\x1b[32m', c:'\x1b[36m', y:'\x1b[33m', r:'\x1b[0m' }
+// Colors only on a real terminal, and never when NO_COLOR is set
+const COLOR = stdout.isTTY && !process.env.NO_COLOR
+const C = COLOR
+  ? { dim:'\x1b[2m', b:'\x1b[1m', g:'\x1b[32m', c:'\x1b[36m', y:'\x1b[33m', r:'\x1b[0m' }
+  : { dim:'', b:'', g:'', c:'', y:'', r:'' }
 const log = (s='') => stdout.write(s + '\n')
+
+// ── Intro banner ────────────────────────────────────────────
+// "LodeStar" in pixel letters: every lit pixel prints as ##, with a
+// ** drop shadow down-right. "Lode" in cyan, "Star" in gold.
+// Edit WELCOME to change the message under it.
+const WELCOME = [
+  'Welcome to Lodestar, and thanks for building with it.',
+  "Let's set up a new site. Press Enter to take the default in (brackets).",
+]
+const GLYPHS = {
+  L:['#...','#...','#...','#...','#...','#...','####'],
+  o:['....','....','.##.','#..#','#..#','#..#','.##.'],
+  d:['...#','...#','.###','#..#','#..#','#..#','.###'],
+  e:['....','....','.##.','#..#','####','#...','.###'],
+  S:['.###','#...','#...','.##.','...#','...#','###.'],
+  t:['.#.','.#.','###','.#.','.#.','.#.','.##'],
+  a:['....','....','.##.','...#','.###','#..#','.###'],
+  r:['....','....','#.##','##..','#...','#...','#...'],
+}
+function banner() {
+  const word = 'LodeStar', split = 4            // letters before `split` are "Lode"
+  const H = 7
+  // grid of cells: 0 empty, 1 = Lode pixel, 2 = Star pixel
+  const grid = Array.from({ length: H + 1 }, () => [])
+  ;[...word].forEach((ch, i) => {
+    const g = GLYPHS[ch]
+    for (let r = 0; r <= H; r++) {
+      for (let c = 0; c < g[0].length; c++) grid[r].push(r < H && g[r][c] === '#' ? (i < split ? 1 : 2) : 0)
+      grid[r].push(0)                            // 1-pixel gap / room for the shadow
+    }
+  })
+  const W = grid[0].length
+  const wide = (stdout.columns || 80) >= W * 2 + 2
+  const lode = COLOR ? '\x1b[1;36m' : '', star = COLOR ? '\x1b[1;33m' : '', shade = COLOR ? '\x1b[2;37m' : ''
+
+  log()
+  for (let r = 0; r <= H; r++) {
+    if (!wide && r === H) break                  // compact version has no shadow row
+    let line = '', cur = null
+    for (let c = 0; c < W; c++) {
+      const v = grid[r][c]
+      const shadow = wide && !v && r > 0 && c > 0 && grid[r - 1][c - 1]
+      const color = v === 1 ? lode : v === 2 ? star : shadow ? shade : ''
+      if (color !== cur) { line += (cur ? C.r : '') + color; cur = color }
+      line += wide ? (v ? '##' : shadow ? '**' : '  ') : (v ? '#' : ' ')
+    }
+    log('  ' + (line + (cur ? C.r : '')).replace(/\s+$/, ''))
+  }
+  log()
+  for (const w of WELCOME) log(`  ${C.b}${w}${C.r}`)
+  log(`  ${C.dim}${'─'.repeat(Math.min(W * (wide ? 2 : 1), 60))}${C.r}`)
+}
 
 async function ask(q, def='') {
   if (AUTO) return def
@@ -39,27 +96,11 @@ async function askChoice(q, options, def=0) {
   return Number.isInteger(n) && n >= 1 && n <= options.length ? n - 1 : def
 }
 
-// ── Theme data ──────────────────────────────────────────────
-const THEMES = ['north', 'fresh', 'pulse', 'harvest']
-const THEME_LABELS = [
-  'north   — simple & modular, works for anything (clean light, cobalt accent)',
-  'fresh   — service / trades / professional (light + blue)',
-  'pulse   — tech / SaaS / startup (deep slate + indigo)',
-  'harvest — food / restaurant / cafe (warm + serif)',
-]
-const FONT_LINKS = {
-  north:   'https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Space+Mono:wght@400;700&display=swap',
-  fresh:   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital@0;1&display=swap',
-  pulse:   'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
-  harvest: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Karla:wght@300;400;500;600;700&display=swap',
-}
+// ── Theme data (src/themes/registry.js is the source of truth) ──
+const THEMES = Object.keys(THEME_REGISTRY)
+const THEME_LABELS = THEMES.map(t => `${t.padEnd(Math.max(...THEMES.map(n => n.length)))} — ${THEME_REGISTRY[t].label}`)
+const RECOMMENDED = Object.fromEntries(THEMES.map(t => [t, THEME_REGISTRY[t].recommended]))
 const NAV_STYLES = ['classic — logo left, links right', 'centered — logo centered', 'minimal — drawer menu always']
-const RECOMMENDED = {
-  north:   ['hero', 'features', 'stats', 'gallery', 'testimonials', 'faq', 'cta'],
-  fresh:   ['hero', 'features', 'stats', 'testimonials', 'faq', 'map', 'cta'],
-  pulse:   ['hero', 'features', 'stats', 'pricing', 'testimonials', 'faq', 'cta'],
-  harvest: ['hero', 'features', 'menu', 'gallery', 'testimonials', 'map', 'cta'],
-}
 const ALL_MODULES = ['hero','features','stats','testimonials','gallery','menu','pricing','team','faq','map','contact','cta']
 
 // ── Color helpers (for optional accent override) ────────────
@@ -126,7 +167,9 @@ function genSiteJs(a) {
   }
   return `// config/site.js — generated by setup.mjs. Edit freely.\n` +
     `export const brand = ${toJs(data.brand)}\n\n` +
-    `export const theme = ${JSON.stringify(data.theme)} // north | fresh | pulse | harvest\n\n` +
+    `// Change any time: colors, type and fonts all follow (dev reloads on save).\n` +
+    `// Per-site tweaks like an accent color live in src/themes/overrides.css.\n` +
+    `export const theme = ${JSON.stringify(data.theme)} // ${THEMES.join(' | ')}\n\n` +
     `export const contact = ${toJs(data.contact)}\n\n` +
     `export const social = ${toJs(data.social)}\n\n` +
     `export const seo = ${toJs(data.seo)}\n`
@@ -195,12 +238,14 @@ function copyTemplate(dest) {
 
 // ── Main ────────────────────────────────────────────────────
 async function main() {
-  log(`\n${C.b}✶ Lodestar${C.r} — new site setup${AUTO ? C.dim + ' (--yes)' + C.r : ''}\n`)
+  banner()
+  if (AUTO) log(`  ${C.dim}--yes: using defaults for everything${C.r}`)
+  log()
 
   const projectName = (await ask('Project folder name', 'my-site')).replace(/[^a-z0-9-_]/gi, '-').toLowerCase()
   const brandName   = await ask('Brand / business name', 'Acme Studio')
   const tagline     = await ask('Tagline', 'A short line about what you do.')
-  const theme       = THEMES[await askChoice('Pick a base style', THEME_LABELS, 0)]
+  const theme       = THEMES[await askChoice('Pick a base style (you can switch later in src/config/site.js)', THEME_LABELS, Math.max(0, THEMES.indexOf(DEFAULT_THEME)))]
   const navStyle    = ['classic','centered','minimal'][await askChoice('Navigation style', NAV_STYLES, 0)]
 
   let accent = ''
@@ -256,21 +301,24 @@ async function main() {
   for (const p of pages) fs.writeFileSync(path.join(cfgDir, 'pages', `${p.slug}.js`), genPageJs(p))
   fs.writeFileSync(path.join(cfgDir, 'index.js'), genIndexJs(pageEntries))
 
-  // active theme (+ optional accent override)
-  let active = `/* active theme — set by setup.mjs. Re-point to switch. */\n@import './${theme}.css';\n`
+  // optional accent override — the theme itself is picked by `theme` in
+  // config/site.js (above); overrides.css layers on top of whichever it is
   if (accent && /^#?[0-9a-f]{6}$/i.test(accent)) {
     const hex = accent.startsWith('#') ? accent : '#' + accent
-    active += `\n:root {\n  --primary: ${hex};\n  --primary-2: ${darken(hex)};\n  --on-primary: ${onColor(hex)};\n}\n`
+    fs.writeFileSync(path.join(dest, 'src/themes/overrides.css'),
+      `/* overrides.css — per-site token tweaks, layered on top of the theme\n` +
+      `   chosen in src/config/site.js. These stay when you switch themes;\n` +
+      `   delete the block to get the theme's own accent back. */\n` +
+      `:root {\n  --primary:    ${hex};\n  --primary-2:  ${darken(hex)};\n  --on-primary: ${onColor(hex)};\n}\n`)
+  } else if (accent) {
+    log(`${C.y}! "${accent}" isn't a 6-digit hex color — keeping the ${theme} accent.${C.r}`)
   }
-  fs.writeFileSync(path.join(dest, 'src/themes/active.css'), active)
 
-  // index.html — fonts + title
+  // index.html — title + description (fonts are injected at dev/build
+  // time from the theme in config/site.js — see scripts/vite-plugin-theme.mjs)
   const idxPath = path.join(dest, 'index.html')
   let idx = fs.readFileSync(idxPath, 'utf8')
-  idx = idx.replace(
-    /<!-- LODESTAR:FONTS -->[\s\S]*?<!-- LODESTAR:FONTS:END -->/,
-    `<!-- LODESTAR:FONTS -->\n    <link href="${FONT_LINKS[theme]}" rel="stylesheet">\n    <!-- LODESTAR:FONTS:END -->`
-  ).replace(/<title>.*?<\/title>/, `<title>${brandName}</title>`)
+  idx = idx.replace(/<title>.*?<\/title>/, `<title>${brandName}</title>`)
    .replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${tagline.replace(/"/g, '&quot;')}">`)
   fs.writeFileSync(idxPath, idx)
 
@@ -292,7 +340,9 @@ async function main() {
     `# ${brandName}\n\nBuilt from the Lodestar starter.\n\n## Develop\n\n\`\`\`\nnpm install\nnpm run dev\n\`\`\`\n\n` +
     `Edit files in **src/config/** to change content, pages, and the home page ` +
     `(\`site.js\` for brand/contact, \`nav.js\`, \`footer.js\`, \`home.js\`, \`pages/<slug>.js\` for other pages).\n` +
-    `Switch the look in **src/themes/active.css**. Drop images into **src/assets/images/**.\n\n` +
+    `Switch the look by changing \`theme\` in **src/config/site.js** (${THEMES.join(', ')}); ` +
+    `colors, type and fonts all follow. Per-site tweaks like an accent color go in **src/themes/overrides.css**. ` +
+    `Drop images into **src/assets/images/**.\n\n` +
     `## Build & deploy\n\n\`\`\`\nnpm run build   # outputs to /public\n\`\`\`\n\n` +
     `Upload /public to your host. For SPA routing, copy **deploy/.htaccess** (Apache/Bluehost) ` +
     `into the web root, or use the Nginx rule in **deploy/nginx.conf.txt** (Forge/Vultr).\n\n` +
@@ -307,7 +357,8 @@ async function main() {
   log(`  ${C.c}cd ../${projectName}${C.r}`)
   log(`  ${C.c}npm install${C.r}`)
   log(`  ${C.c}npm run dev${C.r}\n`)
-  log(`Then edit files in ${C.b}src/config/${C.r} to make it yours.\n`)
+  log(`Then edit files in ${C.b}src/config/${C.r} to make it yours.`)
+  log(`${C.dim}Changed your mind on the look? Set \`theme\` in src/config/site.js: ${THEMES.join(', ')}.${C.r}\n`)
 }
 
 main().catch(e => { console.error(e); rl?.close(); process.exit(1) })

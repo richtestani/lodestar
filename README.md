@@ -133,10 +133,19 @@ Four token-based base styles. A theme is just a set of CSS variables in
 family with monospace section labels, so it sits under any kind of business.
 The other three are opinionated starting points for common verticals.
 
-Switch any time by re-pointing `src/themes/active.css`. To restyle, copy a theme
-file and change the tokens listed in `src/themes/_tokens.css` — that's the whole
-contract. (Re-running setup also injects the matching font `<link>`; if you swap
-themes by hand, update the fonts in `index.html` too.)
+Switch any time by changing `theme` in `src/config/site.js`. Colors, type and
+the theme's Google Fonts all follow, and the dev server reloads on save. A
+small Vite plugin (`scripts/vite-plugin-theme.mjs`) does this: it loads
+`src/themes/<theme>.css` and writes that theme's font `<link>` (from
+`src/themes/registry.js`) into `index.html` at dev and build time. A theme name
+with no matching file fails the build instead of quietly doing nothing.
+
+Per-site tweaks such as a brand accent go in `src/themes/overrides.css`, which
+layers on top of whichever theme is active and survives a switch.
+
+To make your own theme, copy a theme file, change the tokens listed in
+`src/themes/_tokens.css` (that's the whole contract), and point `theme` at its
+name. Add an entry in `registry.js` if it needs different fonts.
 
 ## Modules
 
@@ -246,7 +255,7 @@ src/
     pages/<slug>.js         one file per other page
     modules/<n>.js          optional — sitewide module defaults
     index.js                assembles all of the above into `site`
-  themes/                  base.css + _tokens.css + 4 themes + active.css
+  themes/                  base.css + _tokens.css + 4 themes + registry.js + overrides.css
   modules/                 swappable home sections + registry.js + manifest.js
   modules/pro/              (not in this repo — created by installing lodestar-pro-modules)
   components/              AppNav, AppFooter, ui/ContactForm

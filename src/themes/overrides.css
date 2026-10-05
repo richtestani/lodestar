@@ -1,0 +1,13 @@
+/* overrides.css — per-site token tweaks, layered on top of the theme
+   chosen in src/config/site.js. To switch themes, change `theme` there,
+   not here.
+
+   Anything set here wins over the theme, and stays when you switch
+   themes, e.g. a brand accent:
+
+   :root {
+     --primary:    #c0392b;
+     --primary-2:  #a5311f;
+     --on-primary: #ffffff;
+   }
+*/

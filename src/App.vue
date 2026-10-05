@@ -28,9 +28,10 @@ const navComponent = computed(() => (site.nav.style === 'mega' && ProMegaNav) ? 
 </script>
 
 <style>
-/* Active theme tokens first, then structural base. Swap the theme in
-   src/themes/active.css (or re-run `node setup.mjs`). */
-@import './themes/active.css';
+/* The theme itself is loaded in main.js from `theme` in config/site.js.
+   overrides.css layers any per-site token tweaks on top of it, then
+   base.css adds the structural styles that read those tokens. */
+@import './themes/overrides.css';
 @import './themes/base.css';
 
 .lodestar-dev-notice {

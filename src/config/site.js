@@ -15,8 +15,9 @@ export const brand = {
   logoImage: '',              // optional: a filename in src/assets/images/
 }
 
-// Visual identity lives in src/themes/<theme>.css. setup.mjs writes
-// the matching font <link> into index.html and points active.css here.
+// Visual identity lives in src/themes/<theme>.css. Change this any time:
+// the theme's colors, type and Google Fonts all follow (dev reloads on
+// save). Per-site tweaks such as an accent color go in themes/overrides.css.
 export const theme = 'north' // north | fresh | pulse | harvest
 
 // Feeds footer, contact form, map
