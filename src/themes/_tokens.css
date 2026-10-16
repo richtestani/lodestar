@@ -8,6 +8,28 @@
           --primary --primary-2 --on-primary --border
    TYPE   --font-display --font-body --font-accent --font-mono
    FORM   --radius --maxw --nav-height --section-pad --shadow --shadow-lg
+
+   OPTIONAL STYLE TOKENS — a theme MAY set these to change character
+   beyond color and type; leave them out and every component keeps its
+   original look (each one is read as var(--x, <original value>)).
+     --display-weight   heading weight               (600)
+     --display-tracking heading letter-spacing       (0.01em; hero 0.04em)
+     --display-leading  heading line-height          (1.15)
+     --label-color      eyebrow / small label color  (var(--primary))
+     --btn-case         button text-transform        (uppercase)
+     --btn-tracking     button letter-spacing        (0.16em)
+     --btn-size         button font-size             (0.74rem)
+     --btn-pad          button padding               (0.85rem 2rem)
+     --btn-radius       button corner radius         (var(--radius))
+     --nav-link-case    nav link text-transform      (uppercase)
+     --nav-link-tracking nav link letter-spacing     (0.14em)
+     --nav-link-size    nav link font-size           (0.72rem)
+     --nav-link-weight  nav link font-weight         (600)
+     --logo-weight      text-logo weight             (600)
+     --logo-tracking    text-logo letter-spacing     (0.12em)
+     --logo-color       text-logo color              (var(--primary))
+     --footer-accent    footer headings + link hover (var(--primary)); set it
+                        when --primary is too dark to read on --surface-2
    ============================================================ */
 
 /* _tokens.css — add alongside your other :root tokens */

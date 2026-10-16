@@ -32,7 +32,7 @@ const paragraphs = computed(() =>
 <style scoped>
 .id-wrap { max-width: 720px; }
 .id-para { font-family: var(--font-accent); font-size: 1.1rem; line-height: 1.8; color: var(--text); opacity: 0.9; margin-bottom: 1.15rem; }
-.id-meta { display: grid; gap: 0.6rem; margin: 1.75rem 0; padding: 1.25rem; background: var(--surface-2); border-radius: var(--radius); }
+.id-meta { display: grid; gap: 0.6rem; margin: 1.75rem 0; padding: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .id-meta-row { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--font-body); font-size: 0.92rem; }
 .id-meta-row dt { color: var(--text-muted); }
 .id-meta-row dd { margin: 0; font-weight: 600; text-align: right; }

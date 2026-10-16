@@ -31,7 +31,17 @@ defineProps({
 
 <style scoped>
 .ih { background: var(--bg); }
-.ih .hero-inner { padding-block: var(--section-pad); }
+.ih .hero-inner {
+  padding-block: calc(var(--nav-height) + clamp(2rem, 5vw, 3.5rem)) clamp(0.5rem, 2vw, 1.5rem);
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center;
+}
+/* hero--split's own grid lives in HeroModule's scoped styles, so it never
+   reached this component — the layout is restated here */
+.ih .hero-sub { margin-top: 1rem; color: var(--text-muted); }
+.ih .hero-media img { width: 100%; border-radius: var(--radius); box-shadow: var(--shadow-lg); object-fit: cover; aspect-ratio: 4 / 3; }
+@media (max-width: 768px) {
+  .ih .hero-inner { grid-template-columns: 1fr; }
+}
 .ih-back { display: inline-block; font-family: var(--font-body); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1.25rem; opacity: 0.8; transition: opacity 0.2s; }
 .ih-back:hover { opacity: 1; color: var(--primary); }
 .ih-price { font-family: var(--font-body); font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-top: 0.75rem; }

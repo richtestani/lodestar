@@ -8,6 +8,38 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Site templates.** Setup now asks which template to start from
+  (`--template <name>` skips the question). `standard` is the existing
+  flow. New **`service`** template: a long-scroll home page (stacked hero
+  with product shot, stats, feature grid, alternating feature rows,
+  testimonials, pricing, FAQ, CTA) plus Features, Pricing, Customers
+  (case-study collection), About and Contact pages, a "Get started" nav
+  button, and Product/Company footer columns. Templates live in
+  `templates/` and aren't copied into projects.
+- **`press` theme** — white, ink-black pill buttons, tight heavy Inter
+  headlines, pink labels. Suggested by the `service` template.
+- **Optional style tokens** in `_tokens.css` (button case/tracking/size/
+  padding/radius, heading weight/tracking/leading, label color, nav link
+  case/size/weight, text-logo weight/tracking/color, footer accent). Every
+  one falls back to the previous hard-coded value, so existing themes are
+  unchanged (checked pixel-for-pixel on a standard north site).
+- `hero` variant **`stacked`**, and an optional `note` line under the hero
+  buttons.
+- `features` variant **`rows`** (alternating image + copy, with `label`,
+  `points` and `cta` per item) and a `surface` prop.
+- `nav.cta: { label, to }` — a button after the nav links.
+- `flush: true` on a `rows`-page row removes the gap below it.
+
+### Fixed
+- `itemDetail`'s facts box used `--surface-2` (the dark footer panel) with
+  normal text color, so it was dark-on-dark in light themes. It now uses
+  `--surface` with a border.
+- `itemHero` reused HeroModule's `hero--split` class, but those styles are
+  scoped to HeroModule, so the image stacked under the copy instead of
+  sitting beside it. The split layout is now in `itemHero` itself.
+- Footer grid assumed one link column; with more, the Contact column wrapped
+  to a new row. It now sizes to however many columns `footer.js` has.
+- The build's module check now covers modules used on `rows` pages.
 - **Logo layouts.** `logo` in `config/nav.js` places `brand.logoImage` as
   `inline`, `overhang` (hangs past the bar's bottom edge) or `tab` (on a
   backing plate hung from the top edge), with `height`, `mobileHeight`,

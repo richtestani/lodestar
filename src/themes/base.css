@@ -19,12 +19,12 @@ img { max-width: 100%; display: block; }
 
 .eyebrow {
   font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
-  letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary);
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--label-color, var(--primary));
 }
 .rule { width: 52px; height: 2px; background: var(--primary); opacity: 0.6; margin: 1.1rem 0; border: 0; }
 .rule.is-center { margin-inline: auto; }
 
-h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; font-weight: 600; letter-spacing: 0.01em; }
+h1, h2, h3 { font-family: var(--font-display); line-height: var(--display-leading, 1.15); font-weight: var(--display-weight, 600); letter-spacing: var(--display-tracking, 0.01em); }
 .h-display { font-size: clamp(2.2rem, 5vw, 3.6rem); }
 .h-title   { font-size: clamp(1.6rem, 3.2vw, 2.5rem); }
 .h-sub     { font-size: clamp(1.15rem, 2vw, 1.4rem); }
@@ -35,8 +35,8 @@ h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; font-weight: 6
 
 .btn {
   display: inline-block; cursor: pointer; font-family: var(--font-body); font-weight: 600;
-  font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase;
-  padding: 0.85rem 2rem; border-radius: var(--radius);
+  font-size: var(--btn-size, 0.74rem); letter-spacing: var(--btn-tracking, 0.16em); text-transform: var(--btn-case, uppercase);
+  padding: var(--btn-pad, 0.85rem 2rem); border-radius: var(--btn-radius, var(--radius));
   background: var(--primary); color: var(--on-primary); border: 1.5px solid var(--primary);
   transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
 }

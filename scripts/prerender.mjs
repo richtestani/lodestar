@@ -223,6 +223,11 @@ async function validateModules(site, baseManifest) {
     for (const s of p.sections || []) usedModules.add(s.module)
     for (const s of p.indexSections || []) usedModules.add(s.module)
     for (const s of p.itemSections || []) usedModules.add(s.module)
+    for (const row of p.rows || []) {
+      for (const col of row.columns || [{ modules: row.modules || [] }]) {
+        for (const s of col.modules || []) usedModules.add(s.module)
+      }
+    }
   }
 
   for (const name of usedModules) {

@@ -2,7 +2,7 @@
   <footer id="app-footer" :class="`footer--${style}`">
     <div class="container">
 
-      <div v-if="style === 'columns'" class="footer-grid">
+      <div v-if="style === 'columns'" class="footer-grid" :style="{ '--footer-cols': (footer.columns?.length || 0) + 1 }">
         <div class="footer-brand">
           <RouterLink v-if="logo.show !== false" to="/" class="footer-logo" :class="{ 'has-plate': plate }" :style="logoVars">
             <span v-if="logoImage" class="footer-logo-mark"><img :src="asset(logoImage)" :alt="withText ? '' : brand.name" class="footer-logo-img" /></span>
@@ -78,8 +78,8 @@ const logoVars  = {
    pull text/links from a readable contrast against it. */
 #app-footer, #app-footer a { color: color-mix(in srgb, var(--bg) 88%, var(--text)); }
 
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2.5rem; margin-bottom: 2.5rem; }
-.footer-logo { display: inline-flex; align-items: center; gap: 0.8rem; margin-bottom: 0.9rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.12em; }
+.footer-grid { display: grid; grid-template-columns: 2fr repeat(var(--footer-cols, 2), 1fr); gap: 2.5rem; margin-bottom: 2.5rem; }
+.footer-logo { display: inline-flex; align-items: center; gap: 0.8rem; margin-bottom: 0.9rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: var(--logo-weight, 600); letter-spacing: var(--logo-tracking, 0.12em); }
 .footer-logo-mark { display: block; }
 .footer-logo-img { display: block; height: var(--footer-logo-h, 44px); width: auto; max-width: 240px; object-fit: contain; }
 /* Light backing plate so a logo made for light backgrounds reads on the dark footer */
@@ -88,15 +88,15 @@ const logoVars  = {
 .footer-blurb { font-family: var(--font-accent); font-size: 1rem; line-height: 1.7; max-width: 38ch; opacity: 0.8; }
 .footer-social { list-style: none; display: flex; gap: 1rem; margin-top: 1.1rem; }
 .footer-social a { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; }
-.footer-social a:hover { color: var(--primary); opacity: 1; }
+.footer-social a:hover { color: var(--footer-accent, var(--primary)); opacity: 1; }
 
-.footer-heading { font-family: var(--font-body); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--primary); opacity: 0.85; margin-bottom: 1rem; }
+.footer-heading { font-family: var(--font-body); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--footer-accent, var(--primary)); opacity: 0.85; margin-bottom: 1rem; }
 .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
 .footer-link { font-size: 0.82rem; opacity: 0.75; transition: opacity 0.15s, color 0.15s; }
-.footer-link:hover { opacity: 1; color: var(--primary); }
+.footer-link:hover { opacity: 1; color: var(--footer-accent, var(--primary)); }
 .footer-addr { font-size: 0.82rem; opacity: 0.6; line-height: 1.5; }
 
-.footer-bottom { border-top: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); padding-top: 1.5rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.footer-bottom { border-top: 1px solid color-mix(in srgb, var(--footer-accent, var(--primary)) 18%, transparent); padding-top: 1.5rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
 .footer-bottom p { font-size: 0.68rem; opacity: 0.5; letter-spacing: 0.04em; }
 
 .footer--minimal { text-align: center; }

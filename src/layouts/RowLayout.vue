@@ -21,6 +21,10 @@
       sticky: boolean,               // optional, only meaningful with 2+ columns
       stickyColumn: 'first' | 'last', // optional, default 'first'
       className: 'my-custom-class',  // optional escape hatch for custom.css
+      flush: true,                   // optional — no gap below this row, for
+                                     // full-width section modules (hero,
+                                     // features, cta…) that carry their own
+                                     // padding and tinted bands
       context: { ... },              // optional, forwarded to SectionRenderer
       columns: [ { modules: [ { module: 'hero', props: {...} } ] }, ... ]
       // OR the single-column shorthand — for a full-width row you can skip
@@ -37,7 +41,7 @@
       v-for="(row, i) in rows"
       :key="i"
       class="row-layout__row"
-      :class="row.className"
+      :class="[row.className, { 'is-flush': row.flush }]"
       :style="{ gridTemplateColumns: presetFor(row).ratio.join(' ') }"
     >
       <div
@@ -84,6 +88,7 @@ function isStickyColumn(row, columnIndex) {
   align-items: start;
   margin-bottom: 3rem;
 }
+.row-layout__row.is-flush { margin-bottom: 0; gap: 0; }
 
 .row-layout__column.is-sticky {
   position: sticky;

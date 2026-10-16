@@ -10,9 +10,34 @@ Forge/Vultr staging, Bluehost production).
 ## Start a new site
 
 ```
-node setup.mjs          # interactive — asks name, theme, nav, pages, sections, contact
-node setup.mjs --yes    # non-interactive, all defaults (handy for a quick look)
+node setup.mjs                      # interactive — asks name, template, theme, nav, pages, contact
+node setup.mjs --yes                # non-interactive, all defaults (handy for a quick look)
+node setup.mjs --template service   # skip the template question (combines with --yes)
 ```
+
+### Site templates
+
+The first real question is which **site template** to start from. A
+template decides the starting pages, the home page's module list, nav
+extras and footer columns, and suggests a theme. Both the theme and nav
+style are still asked afterwards, so any template works with any theme.
+
+| template   | pages | home page | suggested theme |
+|------------|-------|-----------|-----------------|
+| `standard` | About, Contact | the theme's recommended modules (or your own list) | your pick |
+| `service`  | Features, Pricing, Customers (case-study collection), About, Contact | stacked hero + product shot → stats → feature grid → alternating feature rows → testimonials → pricing → FAQ → CTA | `press` |
+
+`service` is aimed at a company selling a service or subscription, in the
+style of modern creator-platform / SaaS sites. Home and Contact are kept out
+of the nav links (the logo goes home; a **Get started** button goes to
+Contact).
+
+Templates live in `templates/<name>.mjs` and are only used by setup; the
+folder isn't copied into generated projects. Once a site is generated there
+is nothing template-specific left in it, only ordinary `src/config/` files.
+To add one, copy `templates/service.mjs`; its header comment documents the
+shape (`name`, `label`, `theme`, `navStyle`, `nav`, and a `build()` that
+returns `homeSections`, `pages`, `homePage` and `footerColumns`).
 
 It creates a **sibling folder** next to this template, writes `src/config/*`
 from your answers, sets the theme + matching Google Fonts, and prints next steps:
@@ -142,6 +167,7 @@ Four token-based base styles. A theme is just a set of CSS variables in
 | fresh   | service / trades / professional  | light + blue                 |
 | pulse   | tech / SaaS / startup            | deep slate + indigo→cyan     |
 | harvest | food / restaurant / cafe         | warm cream + serif           |
+| press   | publishing / SaaS / service co.  | white, ink pill buttons, tight bold type, pink labels |
 
 `north` is the default and is deliberately vertical-neutral: a single grotesk
 family with monospace section labels, so it sits under any kind of business.
@@ -159,7 +185,10 @@ layers on top of whichever theme is active and survives a switch.
 
 To make your own theme, copy a theme file, change the tokens listed in
 `src/themes/_tokens.css` (that's the whole contract), and point `theme` at its
-name. Add an entry in `registry.js` if it needs different fonts.
+name. `_tokens.css` also lists **optional style tokens** (button case, radius
+and size, heading weight and tracking, nav link case, label color, footer
+accent). A theme that leaves them out looks exactly as before; `press` uses
+them for its sentence-case pill buttons and tight headlines. Add an entry in `registry.js` if it needs different fonts.
 
 ## Modules
 
@@ -176,11 +205,24 @@ Want a module's settings to default the same way everywhere unless a specific
 instance overrides them? See `src/config/modules/README.md` — optional,
 most modules don't need it.
 
-Two modules ship with layout **variants**, set per-instance via a `variant`
+Three modules ship with layout **variants**, set per-instance via a `variant`
 prop in the section's `props`:
 
-- **hero** — `center` (default) · `split` · `minimal` · `overlay` · `panel`
+- **hero** — `center` (default) · `split` · `minimal` · `overlay` · `panel` · `stacked`
+  (`stacked`: centered copy with the image framed below it, like a product
+  screenshot; with no image it becomes a compact centered page header). Any
+  variant also takes an optional `note`, a small line under the buttons.
+- **features** — `grid` (default) · `rows` (one feature per row, image and
+  copy alternating sides; items can also carry `label`, `points: []` and `cta`).
+  `surface: true|false` overrides the tinted band (on for grid, off for rows).
 - **gallery** — `grid` (default) · `masonry` · `carousel` · `mosaic`
+
+**Nav button.** `cta: { label, to }` in `config/nav.js` adds a button after the
+links ("Get started"), at the end of the drawer on mobile. Base nav styles
+only; the pro mega nav doesn't read it.
+
+**Flush rows.** On a `rows` page, `flush: true` on a row removes the gap below
+it, so full-width section modules stack edge to edge like on the home page.
 
 ## Premium add-ons
 

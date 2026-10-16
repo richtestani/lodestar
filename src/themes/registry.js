@@ -43,6 +43,12 @@ export const THEMES = {
     fonts: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Karla:wght@300;400;500;600;700&display=swap',
     recommended: ['hero', 'features', 'menu', 'gallery', 'testimonials', 'map', 'cta'],
   },
+  press: {
+    colors: { bg: 'white', text: 'ink black', 'surface-2': 'ink black', primary: 'ink black', 'primary-2': 'graphite' },
+    label: 'publishing / SaaS / service company (white, ink pill buttons, pink labels)',
+    fonts: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+    recommended: ['hero', 'stats', 'features', 'testimonials', 'pricing', 'faq', 'cta'],
+  },
 }
 
 export const DEFAULT_THEME = 'north'

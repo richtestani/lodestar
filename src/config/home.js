@@ -23,7 +23,7 @@ export const homePage = {
 export const homeSections = [
 
   { module: 'hero', props: {
-      variant:  'center',      // center | split | minimal | overlay | panel
+      variant:  'center',      // center | split | minimal | overlay | panel | stacked
       eyebrow:  'Dovetail & Co.',
       title:    'Considered goods for everyday rituals.',
       subtitle: 'Small-batch homewares, made by hand and built to last.',

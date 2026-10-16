@@ -20,6 +20,10 @@ export const nav = {
     // shrinkOnScroll: false, // overhang/tab tuck into the bar once you scroll (sticky only); default true
   },
 
+  // Optional button after the links — e.g. a "Get started" call to action.
+  // Shows in the bar on desktop and at the bottom of the mobile drawer.
+  // cta: { label: 'Get started', to: '/contact' },
+
   // Shared across every style (classic/centered/minimal/mega):
   // hoverBg:      '#f4efe6',        // link background on hover — omit for transparent
   // hoverText:    '#c0392b',        // link text color on hover — omit to use the theme's --primary

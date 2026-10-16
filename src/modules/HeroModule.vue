@@ -1,5 +1,5 @@
 <template>
-  <section class="hero" :class="`hero--${variant}`">
+  <section class="hero" :class="[`hero--${variant}`, { 'no-media': usesMedia && !bg }]">
     <div v-if="usesBg && bg" class="hero-bg" :style="{ backgroundImage: `url(${bg})` }" aria-hidden="true"></div>
     <div class="container hero-inner">
       <div class="hero-copy">
@@ -10,6 +10,7 @@
           <RouterLink v-if="primaryCta" :to="primaryCta.to" class="btn">{{ primaryCta.label }}</RouterLink>
           <RouterLink v-if="secondaryCta" :to="secondaryCta.to" class="btn btn--ghost">{{ secondaryCta.label }}</RouterLink>
         </div>
+        <p v-if="note" class="hero-note">{{ note }}</p>
       </div>
       <div v-if="usesMedia && bg" class="hero-media"><img :src="bg" :alt="title" /></div>
     </div>
@@ -20,23 +21,26 @@
 import { computed } from 'vue'
 import { asset } from '@/composables/useAssets.js'
 const props = defineProps({
-  // center | split | minimal | overlay | panel
+  // center | split | minimal | overlay | panel | stacked
   variant: { type: String, default: 'center' },
   eyebrow: String, title: { type: String, default: '' }, subtitle: String,
   image: String, primaryCta: Object, secondaryCta: Object,
+  // optional small line under the buttons ("Free 14-day trial · No card needed")
+  note: String,
 })
 const bg        = computed(() => asset(props.image))
 const usesBg    = computed(() => ['center', 'overlay'].includes(props.variant)) // full-bleed background
-const usesMedia = computed(() => ['split', 'panel'].includes(props.variant))    // inline <img>
+const usesMedia = computed(() => ['split', 'panel', 'stacked'].includes(props.variant)) // inline <img>
 </script>
 
 <style scoped>
 .hero { position: relative; overflow: hidden; }
 .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 0; }
 .hero-inner { position: relative; z-index: 1; padding-block: var(--section-pad); }
-.hero-title { letter-spacing: 0.04em; }
+.hero-title { letter-spacing: var(--display-tracking, 0.04em); }
 .hero-sub { margin-top: 1.1rem; color: var(--text-muted); }
 .hero-actions { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+.hero-note { margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); }
 
 /* ── center: full-bleed image, centered copy (theme-tinted scrim) ── */
 .hero--center { min-height: 84vh; display: flex; align-items: center; text-align: center; background: var(--surface); }
@@ -80,6 +84,25 @@ const usesMedia = computed(() => ['split', 'panel'].includes(props.variant))    
   padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 .hero--panel .hero-title { font-size: clamp(1.8rem, 4vw, 2.8rem); }
+
+/* ── stacked: centered copy, product shot / screenshot framed below ── */
+.hero--stacked { background: var(--bg); }
+.hero--stacked .hero-inner {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding-top: calc(var(--nav-height) + clamp(3rem, 8vw, 6.5rem));
+  padding-bottom: clamp(3rem, 7vw, 5.5rem);
+}
+.hero--stacked .hero-copy { max-width: 860px; }
+.hero--stacked .hero-title { font-size: clamp(2.6rem, 7vw, 5rem); }
+.hero--stacked .hero-sub { max-width: 620px; margin-inline: auto; font-size: clamp(1.1rem, 1.8vw, 1.3rem); }
+.hero--stacked .hero-actions { justify-content: center; }
+.hero--stacked.no-media .hero-inner { padding-bottom: 0; }  /* interior page header: next section supplies the gap */
+.hero--stacked.no-media .hero-title { font-size: clamp(2.4rem, 5.5vw, 4rem); }
+.hero--stacked .hero-media { width: 100%; max-width: 1080px; margin-top: clamp(2.5rem, 6vw, 4.5rem); }
+.hero--stacked .hero-media img {
+  width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+  border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
+}
 
 @media (max-width: 768px) {
   .hero--split .hero-inner { grid-template-columns: 1fr; }

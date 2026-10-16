@@ -1,0 +1,50 @@
+/* PRESS — publishing / SaaS / service companies. Modelled on the
+   clean, editorial look of modern creator-platform sites: bright white
+   pages, ink-black pill buttons, tight heavy headlines, and one hot-pink
+   accent used sparingly for labels. Pairs with the `service` template
+   (node setup.mjs → "service"), but works under any module set.
+   Fonts: Inter (display/body), Inter Tight would also suit.
+
+   Uses the optional style tokens from _tokens.css — that's where the
+   sentence-case pill buttons and tight headings come from. */
+:root {
+  --bg:         #ffffff;
+  --surface:    #f6f6f4;   /* alternating section bands, cards */
+  --surface-2:  #15171a;   /* footer + dark panels */
+  --text:       #15171a;
+  --text-muted: #5f6670;
+  --primary:    #15171a;   /* buttons are ink, not colored */
+  --primary-2:  #394047;
+  --on-primary: #ffffff;
+  --border:     #e6e6e3;
+
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-accent:  'Inter', system-ui, sans-serif;
+  --font-mono:    'Inter', system-ui, sans-serif;
+
+  --radius:      12px;
+  --maxw:        1200px;
+  --nav-height:  72px;
+  --section-pad: clamp(4.5rem, 10vw, 8.5rem);
+  --shadow:      0 1px 2px rgba(21,23,26,0.04), 0 2px 8px rgba(21,23,26,0.04);
+  --shadow-lg:   0 1px 3px rgba(21,23,26,0.06), 0 24px 60px -12px rgba(21,23,26,0.22);
+
+  /* optional style tokens */
+  --display-weight:    750;
+  --display-tracking:  -0.035em;
+  --display-leading:   1.05;
+  --label-color:       #ff1a75;
+  --btn-case:          none;
+  --btn-tracking:      -0.005em;
+  --btn-size:          0.95rem;
+  --btn-pad:           0.8rem 1.5rem;
+  --btn-radius:        999px;
+  --nav-link-case:     none;
+  --nav-link-tracking: -0.005em;
+  --nav-link-size:     0.94rem;
+  --nav-link-weight:   500;
+  --logo-tracking:     -0.03em;
+  --logo-weight:       800;
+  --footer-accent:     #ff5c9a;   /* pink, lifted for contrast on the ink footer */
+}

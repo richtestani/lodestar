@@ -29,6 +29,9 @@
           </span>
         </RouterLink>
       </li>
+      <li v-if="cta" class="nav-cta-item">
+        <RouterLink :to="cta.to" class="btn nav-cta" @click="close">{{ cta.label }}</RouterLink>
+      </li>
     </ul>
 
     <div class="nav-scrim" :class="{ visible: menuOpen }" @click="close"></div>
@@ -48,6 +51,8 @@ const logoImage = brand.logoImage
 const style     = site.nav.style || 'classic'
 const sticky    = site.nav.sticky !== false
 const iconPosition = site.nav.iconPosition || 'left'
+// Optional button at the end of the links ({ label, to }) — e.g. "Get started"
+const cta = site.nav.cta?.label && site.nav.cta?.to ? site.nav.cta : null
 
 // Logo image layout — see the `logo` block in config/nav.js. Only applies
 // when brand.logoImage is set; a text logo always sits inline.
@@ -103,7 +108,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
 
 .nav-logo {
   display: inline-flex; align-items: center; gap: 0.7rem; flex-shrink: 0; position: relative; z-index: 2;
-  font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.12em; color: var(--primary);
+  font-family: var(--font-display); font-size: 1.15rem; font-weight: var(--logo-weight, 600); letter-spacing: var(--logo-tracking, 0.12em); color: var(--logo-color, var(--primary));
 }
 .nav-logo-img { display: block; width: auto; max-width: 260px; object-fit: contain; transition: height 0.25s ease; }
 
@@ -136,13 +141,16 @@ onUnmounted(() => { document.body.style.overflow = '' })
 .nav-links { display: flex; align-items: center; gap: 0.25rem; list-style: none; }
 .nav-link {
   display: block; padding: 0 1.2rem; height: var(--nav-height); line-height: var(--nav-height);
-  font-family: var(--font-body); font-weight: 600; font-size: 0.72rem;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
+  font-family: var(--font-body); font-weight: var(--nav-link-weight, 600); font-size: var(--nav-link-size, 0.72rem);
+  letter-spacing: var(--nav-link-tracking, 0.14em); text-transform: var(--nav-link-case, uppercase); color: var(--text);
   opacity: 0.78; transition: opacity 0.2s, color 0.2s, background 0.2s; white-space: nowrap;
 }
 .nav-link:hover, .nav-link.router-link-exact-active {
   opacity: 1; color: var(--nav-hover-text, var(--primary)); background: var(--nav-hover-bg, transparent);
 }
+
+.nav-cta-item { margin-left: 0.75rem; display: flex; align-items: center; }
+.nav-cta { padding: 0.6rem 1.2rem; white-space: nowrap; }
 
 .nav-link-content { display: inline-flex; align-items: center; gap: 0.5em; }
 .nav-link-content.icon-right { flex-direction: row-reverse; }
@@ -182,6 +190,8 @@ onUnmounted(() => { document.body.style.overflow = '' })
 }
 .nav--minimal .nav-links.open { transform: translateX(0); }
 .nav--minimal .nav-link { width: 100%; height: auto; line-height: 1; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+.nav--minimal .nav-cta-item { margin: 1.25rem 1.5rem 0; }
+.nav--minimal .nav-cta { width: 100%; text-align: center; }
 
 @media (max-width: 768px) {
   .nav-burger { display: flex; }
@@ -201,5 +211,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
   }
   .nav-links.open { transform: translateX(0); }
   .nav-link { width: 100%; height: auto; line-height: 1; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .nav-cta-item { margin: 1.25rem 1.5rem 0; }
+  .nav-cta { width: 100%; text-align: center; }
 }
 </style>
