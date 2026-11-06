@@ -1,10 +1,12 @@
 <template>
-  <component
-    v-for="(section, i) in sections"
-    :is="moduleFor(section.module)"
-    :key="i"
-    v-bind="propsFor(section)"
-  />
+  <template v-for="(section, i) in sections" :key="i">
+    <!-- Wrapped in lodestar-pro-modules' SectionMotion when it's installed
+         and this is a top-level page section (not a RowLayout column). -->
+    <SectionMotion v-if="SectionMotion && !nested" :module="section.module" :override="section.motion">
+      <component :is="moduleFor(section.module)" v-bind="propsFor(section)" />
+    </SectionMotion>
+    <component v-else :is="moduleFor(section.module)" v-bind="propsFor(section)" />
+  </template>
 </template>
 
 <script setup>
@@ -15,6 +17,11 @@ import { moduleRegistry } from '@/modules/registry.js'
 import { BASE_MODULES } from '@/modules/manifest.js'
 import { moduleDefaults } from '@/site.config.js'
 
+// Optional — resolves to null if lodestar-pro-modules isn't installed.
+// Same pickup pattern as modules/registry.js and App.vue's MegaNav.
+const proMotionMatches = import.meta.glob('./pro/SectionMotion.vue', { eager: true })
+const SectionMotion = Object.values(proMotionMatches)[0]?.default || null
+
 const props = defineProps({
   sections: { type: Array, default: () => [] },
   // Extra props threaded into every module in this list — e.g. a
@@ -22,6 +29,9 @@ const props = defineProps({
   // page (see CollectionView.vue / CollectionItemView.vue). A module
   // only uses this if it declares a matching prop; harmless otherwise.
   context: { type: Object, default: () => ({}) },
+  // True when rendering modules inside a RowLayout column — those aren't
+  // page sections, so section-level wrappers (e.g. pro SectionMotion) skip them.
+  nested: { type: Boolean, default: false },
 })
 
 function moduleFor(name) {

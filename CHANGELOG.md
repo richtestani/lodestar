@@ -8,6 +8,17 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Optional section-motion hook.** `SectionRenderer` now wraps each
+  top-level page section in `components/pro/SectionMotion.vue` when
+  lodestar-pro-modules (>= 0.3.0) is installed — same `import.meta.glob`
+  pickup as the pro module registry and MegaNav, so projects without it
+  are unchanged. Settings live in the new `config/motion.js` (off by
+  default); a section can opt out or override with a `motion` key.
+  RowLayout passes `nested` so modules inside columns are never wrapped.
+- **Dev warning for missing images.** `asset()` now warns once per name
+  in dev when a bare filename isn't in `src/assets/images/`, instead of
+  silently passing it through to 404. Root-relative paths (`/og.png`)
+  are left alone, since they point at `public/`.
 - **Site templates.** Setup now asks which template to start from
   (`--template <name>` skips the question). `standard` is the existing
   flow. New **`service`** template: a long-scroll home page (stacked hero

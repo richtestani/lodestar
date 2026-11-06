@@ -301,13 +301,15 @@ function genIndexJs(pageEntries) {
     `import { brand, theme, contact, social, seo, notFound } from './site.js'\n` +
     `import { nav } from './nav.js'\n` +
     `import { footer } from './footer.js'\n` +
-    `import { homePage, homeSections } from './home.js'\n\n` +
+    `import { homePage, homeSections } from './home.js'\n` +
+    `import { motion } from './motion.js' // pro SectionMotion — inert without lodestar-pro-modules\n\n` +
     `${imports}\n\n` +
     `export const moduleDefaults = {\n  // add sitewide module defaults here — see config/modules/README.md\n}\n\n` +
     `export const site = {\n` +
     `  brand, theme, contact, social, seo, notFound, nav, footer,\n` +
     `  pages: [${list}],\n` +
     `  homeSections,\n` +
+    `  motion,\n` +
     `}\n`
 }
 

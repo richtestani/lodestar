@@ -50,7 +50,7 @@
         class="row-layout__column"
         :class="{ 'is-sticky': row.sticky && isStickyColumn(row, ci) }"
       >
-        <SectionRenderer :sections="col.modules || []" :context="row.context || {}" />
+        <SectionRenderer :sections="col.modules || []" :context="row.context || {}" nested />
       </div>
     </div>
   </div>

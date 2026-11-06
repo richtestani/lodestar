@@ -22,6 +22,7 @@ import { brand, theme, contact, social, seo, notFound } from './site.js'
 import { nav } from './nav.js'
 import { footer } from './footer.js'
 import { homePage, homeSections } from './home.js'
+import { motion } from './motion.js' // pro SectionMotion — inert without lodestar-pro-modules
 
 import { page as aboutPage }   from './pages/about.js'
 import { page as contactPage } from './pages/contact.js'
@@ -38,4 +39,5 @@ export const site = {
   brand, theme, contact, social, seo, notFound, nav, footer,
   pages: [homePage, aboutPage, shopPage, contactPage],
   homeSections,
+  motion,
 }

@@ -11,8 +11,27 @@ for (const path in files) {
   byName[name] = files[path]
 }
 
+// Dev-only: a bare filename that isn't in src/assets/images/ used to pass
+// through silently, 404 in the browser, and leave a module looking "broken"
+// with no clue why. Warn once per name instead. Stripped from production
+// builds by Vite (import.meta.env.DEV is statically false there).
+const warned = new Set()
+
 export function asset(ref) {
   if (!ref) return ''
   if (/^(https?:)?\/\//.test(ref) || ref.startsWith('data:')) return ref
-  return byName[ref] || ref
+  // Root-relative paths ('/og.png') point at public/ — not ours to check.
+  if (ref.startsWith('/')) return ref
+  if (byName[ref]) return byName[ref]
+
+  if (import.meta.env.DEV && !warned.has(ref)) {
+    warned.add(ref)
+    const known = Object.keys(byName)
+    console.warn(
+      `[lodestar] image "${ref}" isn't in src/assets/images/ — it will 404.\n` +
+      `  Add the file there (then restart \`npm run dev\` so the glob picks it up), or use a full URL.\n` +
+      `  Available: ${known.length ? known.join(', ') : '(folder is empty)'}`
+    )
+  }
+  return ref
 }
