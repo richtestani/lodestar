@@ -8,12 +8,11 @@
 <template>
   <section class="section content-block">
     <div class="container content-wrap">
+      <PageImage v-for="(img, i) in topImages" :key="'top' + i" :image="img" />
       <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
       <hr class="rule" />
       <h1 class="h-title content-title">{{ title }}</h1>
-      <div class="content-body">
-        <p v-for="(para, i) in paragraphs" :key="i" class="content-para">{{ para }}</p>
-      </div>
+      <ProseBody class="content-body" :body="body" :images="images" para-class="content-para" />
       <RouterLink v-if="cta" :to="cta.to" class="btn content-cta">{{ cta.label }}</RouterLink>
     </div>
   </section>
@@ -21,23 +20,26 @@
 
 <script setup>
 import { computed } from 'vue'
+import ProseBody from '../components/prose/ProseBody.vue'
+import PageImage from '../components/prose/PageImage.vue'
+import { placeImages } from '../components/prose/layouts.js'
 
 const props = defineProps({
   eyebrow: String,
   title: { type: String, default: '' },
   body: { type: [Array, String], default: () => [] },
   cta: Object,
+  images: { type: Array, default: () => [] }, // same presets as view: 'page' — see components/prose/layouts.js
 })
 
-const paragraphs = computed(() =>
-  Array.isArray(props.body) ? props.body : (props.body ? [props.body] : [])
-)
+const topImages = computed(() => placeImages(props.images, 0).top)
 </script>
 
 <style scoped>
+.content-block { overflow-x: clip; } /* full-bleed images use 100vw */
 .content-wrap { max-width: 720px; }
 .content-title { margin-bottom: 1.5rem; }
-.content-para {
+.content-body :deep(.content-para) {
   font-family: var(--font-accent);
   font-size: 1.15rem;
   line-height: 1.85;

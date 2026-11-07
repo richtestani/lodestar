@@ -11,6 +11,25 @@ for (const path in files) {
   byName[name] = files[path]
 }
 
+// Responsive versions of raster images (vite-imagetools, see vite.config.js).
+// Each photo in src/assets/images/ is resized to these widths and converted
+// to WebP at build time, so a 5MB phone photo never ships as-is. SVG and GIF
+// are left alone. Change the widths (w) here if a site needs bigger banners —
+// they must stay a literal string: Vite reads glob options statically.
+const sets = import.meta.glob('../assets/images/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG}', {
+  eager: true,
+  query: '?w=480;960;1600;2400&format=webp&withoutEnlargement&as=srcset',
+  import: 'default',
+})
+const setByName = {}
+for (const path in sets) setByName[path.split('/').pop()] = sets[path]
+
+// srcset string for a local raster image, or '' (full URLs, SVGs, unknown
+// files). Pair it with a `sizes` attribute describing the rendered width.
+export function srcset(ref) {
+  return (ref && setByName[ref]) || ''
+}
+
 // Dev-only: a bare filename that isn't in src/assets/images/ used to pass
 // through silently, 404 in the browser, and leave a module looking "broken"
 // with no clue why. Warn once per name instead. Stripped from production

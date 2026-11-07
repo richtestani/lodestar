@@ -8,6 +8,16 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Images in prose pages.** `view: 'page'` pages and the `content` module
+  take an `images` list with layout presets: `banner`, `float-left`,
+  `float-right` (`size: 'sm'` for a drop-cap-style inline image), `portrait`
+  (round, text follows the curve), `split`, `full-bleed` and `strip`. Place
+  them with `after: N`; control cropping with `focus` and `ratio`. Phones get
+  sensible fallbacks (medium/large floats stack, banners go 16:9). The build
+  fails on a missing `alt` or an unknown layout.
+- **Responsive images.** Photos in `src/assets/images/` are resized at build
+  time to 480–2400px WebP (via `vite-imagetools`, never upscaled) and served
+  with `srcset`; the lead banner loads eagerly with high fetch priority.
 - **Gallery lightbox.** Gallery images open in a full-screen overlay
   (`components/ui/Lightbox.vue`): arrow keys and swipe to move (wraps
   around), Esc / backdrop / ✕ to close, focus kept inside while open and
