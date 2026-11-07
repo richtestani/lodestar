@@ -334,6 +334,54 @@ Put files in `src/assets/images/` and reference them by filename in the config
 (`image: 'hero.jpg'`). Full URLs pass through untouched. Resolution is handled by
 `src/composables/useAssets.js`.
 
+Photos (jpg, png, webp, avif) are resized at build time into 480 / 960 / 1600 /
+2400px WebP versions (never upscaled) via `vite-imagetools`, so you can drop in
+a full-size camera or phone photo without shipping megabytes. Images in prose
+pages use these automatically through `srcset`; the widths live in
+`useAssets.js`. SVG and GIF are left as-is.
+
+### Images in prose pages
+
+A `view: 'page'` page (and the `content` module) takes an `images` list.
+Each image picks a layout preset:
+
+```js
+content: {
+  title: 'About Elle',
+  body: ['First paragraph…', 'Second…', 'Third…'],
+  images: [
+    { src: 'stage.jpg', alt: 'Elle on stage at The Pour House', layout: 'banner', focus: 'top' },
+    { src: 'headshot.jpg', alt: 'Elle smiling', layout: 'portrait', size: 'sm' },
+    { src: 'crowd.jpg', alt: 'A packed room', layout: 'full-bleed', after: 2, caption: 'Live in Raleigh' },
+  ],
+}
+```
+
+| layout        | what it does |
+|---------------|--------------|
+| `banner`      | across the text column. With no `after` it heads the page, above the title |
+| `float-left` / `float-right` | text wraps around it. `size: 'sm'` is drop-cap scale |
+| `portrait`    | round crop, text follows the curve; made for headshots |
+| `split`       | image in one column, all the text in the other (`side: 'right'` to flip); stacks on phones |
+| `full-bleed`  | breaks out to the full window width between paragraphs |
+| `strip`       | a row of small images: `{ layout: 'strip', items: [{ src, alt }, …] }` |
+
+Options: `size` (`sm` · `md` · `lg`, for floats and portrait), `after: N`
+(place after paragraph N; default is before the first), `caption`,
+`ratio`, `focus`.
+
+**Cropping.** Every layout has a default shape (banner 21:9, 16:9 on phones;
+floats 4:5; portrait and strip square; full-bleed 16:9) and the photo fills it,
+trimming the edges. You never need to crop images by hand first, but you do
+control what's kept:
+- `focus` moves the crop window: `'top'` for faces in a portrait-format photo,
+  `'left'`, `'bottom'`, or exact coordinates like `'50% 20%'`.
+- `ratio` changes the shape (`'3/2'`, `'1'`, `'16/9'`), or `'natural'` for no
+  crop at all.
+
+`alt` is required: the build fails on a missing one (use `alt: ''` for a purely
+decorative image) or an unknown layout name.
+
 ## Build & deploy
 
 ```

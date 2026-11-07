@@ -257,6 +257,20 @@ async function validateModules(site, baseManifest) {
     }
   }
 
+  // images in prose pages / content modules — bad layout names and missing alt text
+  const { checkImages } = await import(pathToFileURL(path.join(ROOT, 'src/components/prose/layouts.js')))
+  const contentModules = (list, where) => (list || []).forEach((s, i) => {
+    if (s.module === 'content') errors.push(...checkImages(s.props?.images, `${where} → content module #${i + 1}`))
+  })
+  contentModules(site.homeSections, 'home')
+  for (const p of site.pages || []) {
+    if (p.view === 'page') errors.push(...checkImages(p.content?.images, `page "${p.slug}"`))
+    contentModules(p.sections, `page "${p.slug}"`)
+    for (const row of p.rows || []) {
+      for (const col of row.columns || [{ modules: row.modules || [] }]) contentModules(col.modules, `page "${p.slug}"`)
+    }
+  }
+
   if (errors.length) {
     log(`\n${C.y}${C.b}Config check failed:${C.r}`)
     for (const e of errors) log(`${C.y}  ✗ ${e}${C.r}`)

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import svgLoader from 'vite-svg-loader'
+import { imagetools } from 'vite-imagetools'
 import lodestarTheme from './scripts/vite-plugin-theme.mjs'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -25,6 +26,7 @@ export default defineConfig({
         },
       }),
 	  svgLoader(),
+	  imagetools(), // build-time resizing for srcset() in composables/useAssets.js
 	  lodestarTheme(), // theme + fonts come from `theme` in src/config/site.js
   ],
   resolve: {

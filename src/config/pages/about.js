@@ -35,5 +35,14 @@ export const page = {
       'Whether it is a gift or something for your own table, we want it to mean a little more.',
     ],
     cta: { label: 'Get in touch', to: '/contact' },
+    // images (optional) — drop files in src/assets/images/ and pick a layout.
+    // banner · float-left · float-right · portrait · split · full-bleed · strip
+    // Photos are cropped to fit each layout; `focus` picks what's kept.
+    // README → Images in prose pages has the full list.
+    // images: [
+    //   { src: 'workshop.jpg', alt: 'The workshop bench', layout: 'banner', focus: 'top' },
+    //   { src: 'founder.jpg', alt: 'Our founder, Sam', layout: 'portrait', size: 'sm' },
+    //   { src: 'kiln.jpg', alt: 'Firing the kiln', layout: 'full-bleed', after: 2 },
+    // ],
   },
 }
