@@ -27,6 +27,7 @@ import { motion } from './motion.js' // pro SectionMotion — inert without lode
 import { page as aboutPage }   from './pages/about.js'
 import { page as contactPage } from './pages/contact.js'
 import { page as shopPage }    from './pages/shop.js'
+import { page as galleryPage } from './pages/gallery.js'
 
 // Sitewide module defaults (optional) — add an import + an entry here
 // only for a module that actually needs one. See modules/README.md.
@@ -37,7 +38,7 @@ export const moduleDefaults = {
 
 export const site = {
   brand, theme, contact, social, seo, notFound, nav, footer,
-  pages: [homePage, aboutPage, shopPage, contactPage],
+  pages: [homePage, aboutPage, shopPage, galleryPage, contactPage],
   homeSections,
   motion,
 }

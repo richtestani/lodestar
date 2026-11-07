@@ -216,6 +216,16 @@ prop in the section's `props`:
   copy alternating sides; items can also carry `label`, `points: []` and `cta`).
   `surface: true|false` overrides the tinted band (on for grid, off for rows).
 - **gallery** — `grid` (default) · `masonry` · `carousel` · `mosaic`
+  Click any image to open it in a full-screen **lightbox** (← / → or swipe to
+  move, Esc or backdrop to close; `lightbox: false` turns it off). Images take
+  `{ src, alt, caption, category, full }`: `full` is an optional larger file
+  for the lightbox, `caption` shows in the lightbox (and on the thumbnail with
+  `captions: true`), and `filter: true` adds category chips built from
+  `category`. Also `intro` and `surface: false` (no tinted band).
+
+**Gallery page.** A full-page gallery is just a `rows` page holding one
+`gallery` module; see `src/config/pages/gallery.js`. The lightbox is also its
+own component (`components/ui/Lightbox.vue`) if a custom module needs one.
 
 **Nav button.** `cta: { label, to }` in `config/nav.js` adds a button after the
 links ("Get started"), at the end of the drawer on mobile. Base nav styles

@@ -8,6 +8,18 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Gallery lightbox.** Gallery images open in a full-screen overlay
+  (`components/ui/Lightbox.vue`): arrow keys and swipe to move (wraps
+  around), Esc / backdrop / ✕ to close, focus kept inside while open and
+  returned on close, page scroll locked, neighbors preloaded. On by default;
+  `lightbox: false` turns it off. Images can set `full` (a larger file for the
+  overlay) and `caption`.
+- **Gallery filter, captions, intro.** `filter: true` shows category chips from
+  each image's `category`; the lightbox steps through only the filtered set.
+  `captions: true` prints captions on thumbnails. `intro` and `surface` props
+  match the other section modules.
+- **Gallery page** in the demo site (`config/pages/gallery.js`): a `rows` page
+  with a masonry, filterable gallery.
 - **Optional section-motion hook.** `SectionRenderer` now wraps each
   top-level page section in `components/pro/SectionMotion.vue` when
   lodestar-pro-modules (>= 0.3.0) is installed — same `import.meta.glob`
