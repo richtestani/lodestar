@@ -3,7 +3,7 @@
 // Each page declares a `view`:
 //   'home'    → HomeView (renders site.homeSections)
 //   'page'    → PageView (prose: eyebrow/title/body/cta)
-//   'contact' → ContactView (the contact form)
+//   'contact' → ContactView (a form page — contact, booking, quotes…)
 //   'rows'    → RowsPageView (an ordered list of rows, each row with
 //               1-3 columns of modules — replaces the old 'sections'
 //               view / ModuleView.vue)
@@ -37,6 +37,7 @@ const viewMap = { home: HomeView, contact: ContactView, page: PageView, rows: Ro
 function propsFor(page) {
   if (page.view === 'page') return { content: page.content } // prose page
   if (page.view === 'rows') return { rows: page.rows }        // row/column page
+  if (page.view === 'contact') return { page }                // form page — copy + form config
   return false
 }
 

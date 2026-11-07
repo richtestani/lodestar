@@ -5,7 +5,10 @@
 //
 // view: 'page' | 'contact' | 'sections' | 'collection'
 //   'page'       → prose: { eyebrow, title, body: [...], cta }  (this file)
-//   'contact'    → the contact form, no extra fields needed
+//   'contact'    → a form page. No extra keys → the standard contact form.
+//                  Optional: eyebrow, title, intro, and form: { fields,
+//                  subject, endpoint, submitLabel, success } — see
+//                  README → Pages → contact for a booking example
 //   'sections'   → a list of modules, e.g. a standalone menu page:
 //                  { slug:'menu', name:'Menu', view:'sections',
 //                    sections:[ { module:'menu', props:{...} } ] }
