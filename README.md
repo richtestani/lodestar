@@ -101,7 +101,42 @@ Each entry in `pages` picks a `view`:
 
 - **`home`** — the home page; renders `homeSections`.
 - **`page`** — a prose page (`content: { eyebrow, title, body: [...], cta }`).
-- **`contact`** — the contact form.
+- **`contact`** — a form page. With no extra keys it's the standard contact
+  form. Give it `eyebrow` / `title` / `intro` and a `form` object to make any
+  other form page — booking, quotes, catering orders — without a new view:
+
+```js
+// config/pages/booking.js  (+ an import and an entry in config/index.js)
+export const page = {
+  slug: 'booking', name: 'Booking', view: 'contact',
+  eyebrow: 'Book a show', title: 'Bring live music to your venue',
+  intro: 'Bars, clubs, private events — tell me about your night.',
+  form: {
+    subject: 'Booking inquiry',          // email subject line (Formspree _subject)
+    // endpoint: 'https://formspree.io/f/…', // optional — defaults to contact.formspree
+    submitLabel: 'Send inquiry',
+    success: { title: 'Thanks!', text: "I'll get back to you within a couple of days." },
+    fields: [
+      { name: 'name',  label: 'Your name', type: 'text',  required: true, half: true },
+      { name: 'email', label: 'Email',     type: 'email', required: true, half: true },
+      { name: 'venue', label: 'Venue / event', type: 'text', required: true },
+      { name: 'date',  label: 'Preferred date', type: 'date', half: true },
+      { name: 'type',  label: 'Event type', type: 'select', half: true,
+        options: ['Bar / club', 'Private event', 'Festival', 'Other'] },
+      { name: 'message', label: 'Details', type: 'textarea', rows: 5 },
+    ],
+  },
+}
+```
+
+  Field types: `text` · `email` · `tel` · `date` · `time` · `number` · `url` ·
+  `select` · `textarea` · `checkbox`. Per field: `name` (the key sent to
+  Formspree), `label`, `required`, `placeholder`, `half` (two-up on wide
+  screens), `rows`, `options` (strings or `{ label, value }`), `min`/`max`,
+  `autocomplete`, `value` (initial). Keep a field named `email` — Formspree
+  uses it as the reply-to. Optional fields get an "(optional)" hint. The
+  `contact` module takes the same `form` prop, so the same form can also sit
+  as a section on any page.
 - **`sections`** — a page built from modules, just like the home page. Give it a
   `sections: [...]` array. This is how you make, say, a standalone menu page:
 

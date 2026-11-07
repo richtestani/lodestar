@@ -20,6 +20,13 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   match the other section modules.
 - **Gallery page** in the demo site (`config/pages/gallery.js`): a `rows` page
   with a masonry, filterable gallery.
+- **Configurable form pages.** The `contact` view and `contact` module now
+  take an optional `form` config — `fields`, `subject`, `endpoint`,
+  `submitLabel`, `success` — plus page-level `eyebrow` / `title` / `intro`,
+  so booking, quote or order forms are just another `view: 'contact'` page.
+  Field types: text, email, tel, date, time, number, url, select, textarea,
+  checkbox, with `half` for two-up rows. No config → the same name / email /
+  message form as before.
 - **Optional section-motion hook.** `SectionRenderer` now wraps each
   top-level page section in `components/pro/SectionMotion.vue` when
   lodestar-pro-modules (>= 0.3.0) is installed — same `import.meta.glob`
