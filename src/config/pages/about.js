@@ -1,18 +1,27 @@
 // ============================================================
-// config/pages/about.js — one page. Every file in this folder is
-// picked up automatically (config/index.js globs this folder) —
-// drop a new file in to add a page, no other wiring needed.
+// config/pages/about.js — one page. To add a page, create a file in
+// this folder, then register it in config/index.js: an import plus an
+// entry in `pages: [...]`. Pages aren't picked up automatically —
+// config/index.js explains why (prerender loads it in plain Node,
+// where Vite's import.meta.glob doesn't exist). The order of `pages`
+// is the order of the nav's auto-derived links (unless config/nav.js
+// sets nav.links by hand).
 //
-// view: 'page' | 'contact' | 'sections' | 'collection'
-//   'page'       → prose: { eyebrow, title, body: [...], cta }  (this file)
+// view: 'page' | 'contact' | 'rows' | 'collection'
+//   'page'       → prose: { eyebrow, title, body: [...], cta, images, media }  (this file)
 //   'contact'    → a form page. No extra keys → the standard contact form.
 //                  Optional: eyebrow, title, intro, and form: { fields,
 //                  subject, endpoint, submitLabel, success } — see
 //                  README → Pages → contact for a booking example
-//   'sections'   → a list of modules, e.g. a standalone menu page:
-//                  { slug:'menu', name:'Menu', view:'sections',
-//                    sections:[ { module:'menu', props:{...} } ] }
-//                  (same module system as config/home.js's homeSections)
+//   'rows'       → rows of modules, each row 1–3 columns, e.g. a
+//                  standalone menu page:
+//                  { slug:'menu', name:'Menu', view:'rows',
+//                    rows:[ { modules:[ { module:'menu', props:{...} } ] } ] }
+//                  (same modules as config/home.js's homeSections; see
+//                  config/pages/gallery.js, and layouts/RowLayout.vue for
+//                  multi-column rows).
+//   Any other view name (a typo, or the old 'sections') renders a blank
+//   page with no error, so check the spelling if a page comes up empty.
 //   'collection' → a listing + one page per item — see config/pages/shop.js
 //
 // seo (optional) → { title, description }; omit to fall back to
