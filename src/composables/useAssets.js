@@ -30,6 +30,26 @@ export function srcset(ref) {
   return (ref && setByName[ref]) || ''
 }
 
+// Video, audio, PDFs and caption files live in src/assets/media/. They're
+// copied to the build with a content hash like any other asset — never
+// inlined as data: URIs, however small (a 2KB .vtt as a data: URI is
+// harder to cache and debug, and CSPs often block it).
+const mediaFiles = import.meta.glob('../assets/media/*', { eager: true, query: '?url&no-inline', import: 'default' })
+const mediaByName = {}
+for (const path in mediaFiles) mediaByName[path.split('/').pop()] = mediaFiles[path]
+
+// Resolves a media reference: full URLs and root-relative paths pass
+// through, bare filenames resolve against src/assets/media/ first and
+// then src/assets/images/ (so a poster or cover can sit with the photos).
+export function media(ref) {
+  if (!ref) return ''
+  if (/^(https?:)?\/\//.test(ref) || ref.startsWith('data:') || ref.startsWith('/')) return ref
+  if (mediaByName[ref]) return mediaByName[ref]
+  if (byName[ref]) return byName[ref]
+  warnMissing(ref, 'src/assets/media/', Object.keys(mediaByName))
+  return ref
+}
+
 // Dev-only: a bare filename that isn't in src/assets/images/ used to pass
 // through silently, 404 in the browser, and leave a module looking "broken"
 // with no clue why. Warn once per name instead. Stripped from production
@@ -42,15 +62,17 @@ export function asset(ref) {
   // Root-relative paths ('/og.png') point at public/ — not ours to check.
   if (ref.startsWith('/')) return ref
   if (byName[ref]) return byName[ref]
+  warnMissing(ref, 'src/assets/images/', Object.keys(byName))
+  return ref
+}
 
+function warnMissing(ref, folder, known) {
   if (import.meta.env.DEV && !warned.has(ref)) {
     warned.add(ref)
-    const known = Object.keys(byName)
     console.warn(
-      `[lodestar] image "${ref}" isn't in src/assets/images/ — it will 404.\n` +
+      `[lodestar] "${ref}" isn't in ${folder} — it will 404.\n` +
       `  Add the file there (then restart \`npm run dev\` so the glob picks it up), or use a full URL.\n` +
       `  Available: ${known.length ? known.join(', ') : '(folder is empty)'}`
     )
   }
-  return ref
 }

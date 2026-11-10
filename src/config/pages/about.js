@@ -44,5 +44,11 @@ export const page = {
     //   { src: 'founder.jpg', alt: 'Our founder, Sam', layout: 'portrait', size: 'sm' },
     //   { src: 'kiln.jpg', alt: 'Firing the kiln', layout: 'full-bleed', after: 2 },
     // ],
+    // media (optional) — video, audio or PDFs from src/assets/media/,
+    // placed with `after` the same way. README → Media has every option.
+    // media: [
+    //   { type: 'video', src: 'workshop.mp4', title: 'A day in the workshop', poster: 'workshop.jpg', after: 1 },
+    //   { type: 'pdf', src: 'care-guide.pdf', title: 'Care guide', description: '1 page' },
+    // ],
   },
 }

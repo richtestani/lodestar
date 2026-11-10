@@ -231,7 +231,8 @@ Drop-in home sections in `src/modules/`, wired up in `registry.js`:
 
 `hero` · `features` · `stats` · `testimonials` · `gallery` · `menu` ·
 `pricing` · `team` · `faq` · `map` · `contact` · `cta` ·
-`collectionGrid` · `itemHero` · `itemDetail` (see Pages → collection)
+`collectionGrid` · `itemHero` · `itemDetail` (see Pages → collection) ·
+`media` (video, audio and PDFs; see Media)
 
 Add your own: build a `*.vue` that reads props, register it in `registry.js`,
 reference it in `homeSections`.
@@ -381,6 +382,102 @@ control what's kept:
 
 `alt` is required: the build fails on a missing one (use `alt: ''` for a purely
 decorative image) or an unknown layout name.
+
+## Media
+
+Video, audio and PDFs use the browser's own players: no library, and keyboard,
+screen-reader and picture-in-picture support come for free. Put files in
+`src/assets/media/` and reference them by filename; full URLs (a video CDN,
+S3, Bunny) pass through. Posters and cover art can live in either
+`src/assets/media/` or `src/assets/images/`.
+
+Every item has a `type`, a `src` and a `title` (the accessible name, and the
+link text for a PDF):
+
+```js
+{ type: 'video', src: 'promo.mp4', title: 'Spring tour promo',
+  poster: 'promo.jpg',                       // shown before play
+  captions: [{ src: 'promo.en.vtt', lang: 'en', label: 'English' }],
+  caption: 'Filmed at The Pour House' }      // text under the player
+
+{ type: 'audio', src: 'single.mp3', title: 'Neon Rain', artist: 'Elle Sera', artwork: 'neon-rain.jpg' }
+
+{ type: 'pdf', src: 'rider.pdf', title: 'Stage plot & tech rider',
+  description: '2 pages · updated March 2026', display: 'inline' }
+```
+
+| type    | options |
+|---------|---------|
+| `video` | `poster`, `captions` (WebVTT `.vtt` only), `defaultCaptions: true` (show the first track without the viewer turning it on), `ratio` (`'16/9'` default, `'9/16'` for vertical phone video, `'natural'`), `loop`, `sources` (several encodings, best first: `[{ src: 'clip.webm' }, { src: 'clip.mp4' }]`) |
+| `audio` | `artist`, `artwork` (square image) |
+| `pdf`   | `display`: `'link'` (default, a card that opens it in a new tab) or `'inline'` (the browser's PDF viewer in the page, with the card underneath), `description`, `height` (inline viewer, default `min(80vh, 900px)`) |
+
+Shared: `caption`.
+
+**In a prose page** (`view: 'page'`, and the `content` module), add a `media`
+list next to `images`. Placement works the same: `after: N` puts it after
+paragraph N, and with both an image and media at the same spot the image comes
+first. Layouts: `column` (default, the text width), `full-bleed`,
+`float-left` / `float-right` with `size: 'sm' | 'md' | 'lg'`. Floats suit
+audio cards and short clips; on phones they stack full-width.
+
+```js
+content: {
+  title: 'New music',
+  body: ['First paragraph…', 'Second…', 'Third…'],
+  media: [
+    { type: 'video', src: 'studio.mp4', title: 'In the studio', poster: 'studio.jpg', after: 1 },
+    { type: 'audio', src: 'single.mp3', title: 'Neon Rain', layout: 'float-right', after: 2 },
+  ],
+}
+```
+
+**As a section,** use the `media` module on the home page or a `rows` page.
+`columns: 2` or `3` makes a grid (phones always get one column); a single
+audio track or PDF sits at text width instead of stretching:
+
+```js
+{ module: 'media', props: {
+    eyebrow: 'Music', title: 'Listen', columns: 2, surface: true,
+    media: [
+      { type: 'audio', src: 'neon-rain.mp3', title: 'Neon Rain', artist: 'Elle Sera', artwork: 'neon-rain.jpg' },
+      { type: 'audio', src: 'low-tide.mp3',  title: 'Low Tide',  artist: 'Elle Sera', artwork: 'low-tide.jpg' },
+    ] } }
+```
+
+**In a `.md` doc or your own component,** use the player directly:
+`<MediaEmbed :item="{ type: 'pdf', src: 'rider.pdf', title: 'Tech rider' }" />`
+(import from `@/components/media/MediaEmbed.vue`).
+
+**Behaviour.** Starting one video or track pauses any other on the page.
+Videos load only their first few KB (duration and size) and audio loads
+nothing until play is pressed, so a page of ten players costs about what a
+page of ten images does. Inline PDFs show only the link card on phones: most
+mobile browsers draw just the first page inside a frame, which looks broken.
+
+**Build checks.** The build fails on a missing `title`, an unknown `type`,
+layout or `display`, a file whose extension doesn't match its type, captions
+that aren't `.vtt` or have no `lang`, and a bare filename that isn't in
+`src/assets/media/` or `src/assets/images/`.
+
+**Preparing files.** Keep video small for the web: H.264 MP4 at 1080p or
+720p, `+faststart` so playback starts before the download finishes. With
+ffmpeg:
+
+```
+ffmpeg -i input.mov -c:v libx264 -crf 23 -preset slow -vf "scale=-2:1080" -c:a aac -b:a 128k -movflags +faststart promo.mp4
+```
+
+Anything long or heavily watched belongs on a video host or CDN rather than
+your server; point `src` at its URL and add the host to `media-src` in the
+CSP (see `deploy/nginx.conf.txt`). Convert `.srt` captions to `.vtt` with any
+subtitle tool, or `ffmpeg -i promo.srt promo.en.vtt`.
+
+**Servers.** `deploy/nginx.conf.txt`'s CSP allows `media-src 'self'` and
+`frame-src 'self'` (inline PDFs need the latter). Nginx and Apache both serve
+byte ranges for static files, which is what makes seeking work. Captions must
+be served as `text/vtt`; `deploy/.htaccess` sets that for Apache, and the
+nginx file shows the line to add if an older `mime.types` lacks it.
 
 ## Build & deploy
 

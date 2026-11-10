@@ -257,14 +257,25 @@ async function validateModules(site, baseManifest) {
     }
   }
 
-  // images in prose pages / content modules — bad layout names and missing alt text
+  // images and media in prose pages / content + media modules — bad layout
+  // names, missing alt text or titles, and media files that don't exist
   const { checkImages } = await import(pathToFileURL(path.join(ROOT, 'src/components/prose/layouts.js')))
+  const { checkMedia } = await import(pathToFileURL(path.join(ROOT, 'src/components/media/media.js')))
+  const assetDirs = ['src/assets/media', 'src/assets/images'].map((d) => path.join(ROOT, d))
+  const localExists = (name) => assetDirs.some((d) => fs.existsSync(path.join(d, name)))
   const contentModules = (list, where) => (list || []).forEach((s, i) => {
-    if (s.module === 'content') errors.push(...checkImages(s.props?.images, `${where} → content module #${i + 1}`))
+    if (s.module === 'content') {
+      errors.push(...checkImages(s.props?.images, `${where} → content module #${i + 1}`))
+      errors.push(...checkMedia(s.props?.media, `${where} → content module #${i + 1}`, localExists))
+    }
+    if (s.module === 'media') errors.push(...checkMedia(s.props?.media, `${where} → media module #${i + 1}`, localExists))
   })
   contentModules(site.homeSections, 'home')
   for (const p of site.pages || []) {
-    if (p.view === 'page') errors.push(...checkImages(p.content?.images, `page "${p.slug}"`))
+    if (p.view === 'page') {
+      errors.push(...checkImages(p.content?.images, `page "${p.slug}"`))
+      errors.push(...checkMedia(p.content?.media, `page "${p.slug}"`, localExists))
+    }
     contentModules(p.sections, `page "${p.slug}"`)
     for (const row of p.rows || []) {
       for (const col of row.columns || [{ modules: row.modules || [] }]) contentModules(col.modules, `page "${p.slug}"`)

@@ -12,7 +12,7 @@
       <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
       <hr class="rule" />
       <h1 class="h-title content-title">{{ title }}</h1>
-      <ProseBody class="content-body" :body="body" :images="images" para-class="content-para" />
+      <ProseBody class="content-body" :body="body" :images="images" :media="media" para-class="content-para" />
       <RouterLink v-if="cta" :to="cta.to" class="btn content-cta">{{ cta.label }}</RouterLink>
     </div>
   </section>
@@ -30,6 +30,7 @@ const props = defineProps({
   body: { type: [Array, String], default: () => [] },
   cta: Object,
   images: { type: Array, default: () => [] }, // same presets as view: 'page' — see components/prose/layouts.js
+  media: { type: Array, default: () => [] },  // video / audio / PDF — see components/media/media.js
 })
 
 const topImages = computed(() => placeImages(props.images, 0).top)
