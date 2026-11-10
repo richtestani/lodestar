@@ -11,7 +11,7 @@
 
 <script setup>
 // Renders an ordered list of modules from the registry. Used by HomeView
-// (site.homeSections), ModuleView ('sections'-view pages), and
+// (site.homeSections), RowLayout (each column of a 'rows' page), and
 // CollectionView/CollectionItemView ('collection'-view pages).
 import { moduleRegistry } from '@/modules/registry.js'
 import { BASE_MODULES } from '@/modules/manifest.js'

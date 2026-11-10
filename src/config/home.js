@@ -3,9 +3,9 @@
 // config/pages/ (rather than folded in as just another page)
 // because it works a little differently: `homePage` is its
 // pages[]/nav/SEO entry, and `homeSections` is its own
-// top-level list, the same shape `sections` takes on a
-// 'sections'-view page — see modules/registry.js for the
-// available module names.
+// top-level list of modules — the same entries a 'rows' page
+// puts in each row's `modules` — see modules/registry.js for
+// the available module names.
 // ============================================================
 
 export const homePage = {

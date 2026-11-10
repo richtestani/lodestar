@@ -8,6 +8,29 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Media: video, audio and PDFs.** Native players with no library
+  (`components/media/`). Files go in the new `src/assets/media/` folder (copied
+  to the build with a content hash, never inlined), or use a full URL. Video
+  takes `poster`, WebVTT `captions`, `ratio`, `loop` and multiple `sources`;
+  audio renders as a track card with `artist` and `artwork`; PDFs show as a
+  link card or, with `display: 'inline'`, in the browser's viewer (link card
+  only on phones). Starting one player pauses the others.
+- **`media` in prose pages.** `view: 'page'` pages and the `content` module
+  take a `media` list placed with `after: N` like `images`, with `column`,
+  `full-bleed` and `float-left` / `float-right` layouts.
+- **`media` module** for home and `rows` pages: one featured video, or a 1–3
+  column grid of tracks, clips or PDF cards, with `eyebrow` / `title` /
+  `intro` / `surface`.
+- **Build checks for media**: missing `title`, unknown type or layout, a file
+  extension that doesn't match its type, non-`.vtt` captions or a missing
+  `lang`, and local filenames that don't exist all fail the build.
+
+### Changed
+- **CSP** in `deploy/nginx.conf.txt` adds `media-src 'self'` and `'self'` to
+  `frame-src` so local video/audio play and inline PDFs render. Update the
+  header on existing servers before using inline PDFs.
+- `deploy/.htaccess` sets `text/vtt` (and common video/audio types) so
+  captions work on shared Apache hosts.
 - **Images in prose pages.** `view: 'page'` pages and the `content` module
   take an `images` list with layout presets: `banner`, `float-left`,
   `float-right` (`size: 'sm'` for a drop-cap-style inline image), `portrait`

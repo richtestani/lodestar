@@ -17,13 +17,16 @@
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-Frame-Options "SAMEORIGIN" always;  # SAMEORIGIN (not DENY) so inline PDFs can frame
 add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), interest-cohort=()" always;
 
 # Content-Security-Policy — tuned to exactly what the template loads.
 # Tighten img-src to your image host(s) if you can; widen the allowlists
 # if you add analytics, a different form host, etc.
-add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://www.google.com https://maps.google.com; connect-src 'self' https://formspree.io; form-action 'self' https://formspree.io; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests" always;
+#   media-src  video/audio/captions. 'self' covers src/assets/media/; add your
+#              video host if the files live elsewhere (e.g. https://cdn.example.com)
+#   frame-src  'self' lets inline PDFs (display: 'inline') render in their frame
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self'; frame-src 'self' https://www.google.com https://maps.google.com; connect-src 'self' https://formspree.io; form-action 'self' https://formspree.io; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests" always;
 
 # Routing + Not Found. `npm run build` writes every page as its own
 # <page>/index.html, so pages are served as plain files. Anything else
@@ -42,3 +45,11 @@ location = /404.html {
 # location / {
 #     try_files $uri $uri/ /index.html;
 # }
+
+# ── Media (video, audio, captions) ──
+# Nginx serves byte ranges for static files out of the box, which is what
+# lets a video seek without downloading the whole file — nothing to add.
+# Older mime.types files don't know WebVTT, and browsers ignore captions
+# served as application/octet-stream. If captions don't appear, add this
+# to the http { } block's types (or check: curl -I https://site/…/x.vtt):
+#   types { text/vtt vtt; }

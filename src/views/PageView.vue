@@ -6,7 +6,7 @@
         <p v-if="content.eyebrow" class="eyebrow">{{ content.eyebrow }}</p>
         <hr class="rule" />
         <h1 class="h-title page-title">{{ content.title }}</h1>
-        <ProseBody class="page-body" :body="content.body" :images="content.images" para-class="page-para" />
+        <ProseBody class="page-body" :body="content.body" :images="content.images" :media="content.media" para-class="page-para" />
         <RouterLink v-if="content.cta" :to="content.cta.to" class="btn page-cta">{{ content.cta.label }}</RouterLink>
       </div>
     </section>

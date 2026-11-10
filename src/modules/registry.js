@@ -30,6 +30,7 @@ import CollectionGridModule from './CollectionGridModule.vue'
 import ItemHeroModule       from './ItemHeroModule.vue'
 import ItemDetailModule     from './ItemDetailModule.vue'
 import ContentModule        from './ContentModule.vue'
+import MediaModule          from './MediaModule.vue'
 
 // structural, non-content modules — see note above
 import { RouterView } from 'vue-router'
@@ -53,6 +54,7 @@ const baseModuleRegistry = {
   itemHero:       ItemHeroModule,
   itemDetail:     ItemDetailModule,
   content:        ContentModule,
+  media:          MediaModule,
 
   // structural — see note above
   pageNav:      PageNav,
