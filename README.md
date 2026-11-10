@@ -391,8 +391,8 @@ screen-reader and picture-in-picture support come for free. Put files in
 S3, Bunny) pass through. Posters and cover art can live in either
 `src/assets/media/` or `src/assets/images/`.
 
-Every item has a `type`, a `src` and a `title` (the accessible name, and the
-link text for a PDF):
+Every item has a `type`, a `src` (or for YouTube/Vimeo, a `url`) and a
+`title` (the accessible name, and the link text for a PDF):
 
 ```js
 { type: 'video', src: 'promo.mp4', title: 'Spring tour promo',
@@ -404,6 +404,10 @@ link text for a PDF):
 
 { type: 'pdf', src: 'rider.pdf', title: 'Stage plot & tech rider',
   description: '2 pages · updated March 2026', display: 'inline' }
+
+{ type: 'youtube', url: 'https://youtu.be/dQw4w9WgXcQ', title: 'Live at The Pour House' }
+
+{ type: 'vimeo', url: 'https://vimeo.com/76979871', title: 'Studio session', poster: 'studio.jpg' }
 ```
 
 | type    | options |
@@ -411,8 +415,22 @@ link text for a PDF):
 | `video` | `poster`, `captions` (WebVTT `.vtt` only), `defaultCaptions: true` (show the first track without the viewer turning it on), `ratio` (`'16/9'` default, `'9/16'` for vertical phone video, `'natural'`), `loop`, `sources` (several encodings, best first: `[{ src: 'clip.webm' }, { src: 'clip.mp4' }]`) |
 | `audio` | `artist`, `artwork` (square image) |
 | `pdf`   | `display`: `'link'` (default, a card that opens it in a new tab) or `'inline'` (the browser's PDF viewer in the page, with the card underneath), `description`, `height` (inline viewer, default `min(80vh, 900px)`) |
+| `youtube` / `vimeo` | `url` (paste the link from the Share button; watch, `youtu.be`, Shorts and unlisted Vimeo links all work) or `id`, `poster` (your own thumbnail), `start` (seconds; a YouTube link's own `?t=90` also works), `ratio` (`'9/16'` for Shorts) |
 
-Shared: `caption`.
+Shared: `caption`, and for search engines `description`, `uploadDate`
+(`'2026-03-14'`) and `duration` (`'3:45'` or seconds). See Structured data below.
+
+**YouTube and Vimeo** load as a thumbnail with a play button; the real player
+loads only when it's clicked. A normal YouTube embed pulls in over 500KB of
+script and sets cookies on page load, for every video, watched or not; here
+nothing from YouTube or Vimeo runs until someone presses play, and then it
+comes from YouTube's privacy-enhanced domain (`youtube-nocookie.com`) or with
+Vimeo's do-not-track flag. The thumbnail is a real link to the video, so it
+still works with JavaScript off. YouTube supplies a thumbnail automatically;
+set `poster` to use a better frame of your own (and make no request to Google
+until the click). **Vimeo has no public thumbnail URL, so give Vimeo videos a
+`poster`**, otherwise they show a plain dark panel with the title. Captions
+for embeds are turned on in YouTube or Vimeo, not here.
 
 **In a prose page** (`view: 'page'`, and the `content` module), add a `media`
 list next to `images`. Placement works the same: `after: N` puts it after
@@ -449,16 +467,28 @@ audio track or PDF sits at text width instead of stretching:
 `<MediaEmbed :item="{ type: 'pdf', src: 'rider.pdf', title: 'Tech rider' }" />`
 (import from `@/components/media/MediaEmbed.vue`).
 
-**Behaviour.** Starting one video or track pauses any other on the page.
+**Behaviour.** Starting one video or track pauses any other on the page; an
+embedded YouTube/Vimeo video goes back to its thumbnail when something else
+starts.
 Videos load only their first few KB (duration and size) and audio loads
 nothing until play is pressed, so a page of ten players costs about what a
 page of ten images does. Inline PDFs show only the link card on phones: most
 mobile browsers draw just the first page inside a frame, which looks broken.
 
+**Structured data.** Each video and audio item adds schema.org JSON-LD
+(`VideoObject` / `AudioObject`) beside its player, captured into the static
+HTML at build time, so search engines know what's on the page. URLs are made
+absolute from `VITE_SITE_URL` in `.env.production`. Google only shows a video
+in video results when it has a thumbnail and an `uploadDate`, so set
+`uploadDate` on videos you want found (YouTube and posters cover the
+thumbnail). A Vimeo video without a `poster` gets no structured data.
+
 **Build checks.** The build fails on a missing `title`, an unknown `type`,
 layout or `display`, a file whose extension doesn't match its type, captions
-that aren't `.vtt` or have no `lang`, and a bare filename that isn't in
-`src/assets/media/` or `src/assets/images/`.
+that aren't `.vtt` or have no `lang`, a bare filename that isn't in
+`src/assets/media/` or `src/assets/images/`, a YouTube/Vimeo link that isn't a
+video (a channel page, say), and a malformed `start`, `uploadDate` or
+`duration`.
 
 **Preparing files.** Keep video small for the web: H.264 MP4 at 1080p or
 720p, `+faststart` so playback starts before the download finishes. With
@@ -473,8 +503,9 @@ your server; point `src` at its URL and add the host to `media-src` in the
 CSP (see `deploy/nginx.conf.txt`). Convert `.srt` captions to `.vtt` with any
 subtitle tool, or `ffmpeg -i promo.srt promo.en.vtt`.
 
-**Servers.** `deploy/nginx.conf.txt`'s CSP allows `media-src 'self'` and
-`frame-src 'self'` (inline PDFs need the latter). Nginx and Apache both serve
+**Servers.** `deploy/nginx.conf.txt`'s CSP allows `media-src 'self'`, and
+`frame-src` allows `'self'` (inline PDFs) plus `youtube-nocookie.com` and
+`player.vimeo.com` (embeds). Nginx and Apache both serve
 byte ranges for static files, which is what makes seeking work. Captions must
 be served as `text/vtt`; `deploy/.htaccess` sets that for Apache, and the
 nginx file shows the line to add if an older `mime.types` lacks it.

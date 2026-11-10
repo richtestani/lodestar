@@ -25,8 +25,10 @@ add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), interes
 # if you add analytics, a different form host, etc.
 #   media-src  video/audio/captions. 'self' covers src/assets/media/; add your
 #              video host if the files live elsewhere (e.g. https://cdn.example.com)
-#   frame-src  'self' lets inline PDFs (display: 'inline') render in their frame
-add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self'; frame-src 'self' https://www.google.com https://maps.google.com; connect-src 'self' https://formspree.io; form-action 'self' https://formspree.io; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests" always;
+#   frame-src  'self' lets inline PDFs (display: 'inline') render in their frame;
+#              youtube-nocookie.com and player.vimeo.com load YouTube/Vimeo
+#              players after a click. Drop either if the site never embeds it.
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self'; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://www.google.com https://maps.google.com; connect-src 'self' https://formspree.io; form-action 'self' https://formspree.io; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests" always;
 
 # Routing + Not Found. `npm run build` writes every page as its own
 # <page>/index.html, so pages are served as plain files. Anything else

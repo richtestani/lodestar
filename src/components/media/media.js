@@ -8,12 +8,15 @@
 //     captions: [{ src: 'promo.en.vtt', lang: 'en', label: 'English' }] }
 //   { type: 'audio', src: 'single.mp3', title: 'Single', artist: 'Elle', artwork: 'cover.jpg' }
 //   { type: 'pdf',   src: 'rider.pdf',  title: 'Tech rider', display: 'inline' }
+//   { type: 'youtube', url: 'https://youtu.be/dQw4w9WgXcQ', title: 'Live at The Pour House' }
+//   { type: 'vimeo',   url: 'https://vimeo.com/76979871',   title: 'Studio session', poster: 'studio.jpg' }
 //
 // Files live in src/assets/media/ (posters and artwork can also come
 // from src/assets/images/); full URLs pass through. See README → Media.
 // ============================================================
 
-export const MEDIA_TYPES = ['video', 'audio', 'pdf']
+export const MEDIA_TYPES = ['video', 'audio', 'pdf', 'youtube', 'vimeo']
+const HOSTED = ['youtube', 'vimeo'] // embedded from another site: url/id instead of src
 
 // Where an item sits in a prose page. `column` is the text column width.
 export const MEDIA_LAYOUTS = ['column', 'full-bleed', 'float-left', 'float-right']
@@ -40,6 +43,71 @@ export function mimeFor(ref) {
     mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', ogg: 'audio/ogg', oga: 'audio/ogg',
     opus: 'audio/ogg', wav: 'audio/wav', flac: 'audio/flac',
   })[e]
+}
+
+// ── YouTube / Vimeo ──────────────────────────────────────────
+// Accepts whatever a client pastes: a watch/share/shorts/embed link or
+// the bare id. Returns { id, hash? } or null.
+const YT_ID = /^[\w-]{11}$/
+export function parseYouTube(ref) {
+  if (!ref) return null
+  const s = String(ref).trim()
+  if (YT_ID.test(s)) return { id: s }
+  let u
+  try { u = new URL(s.startsWith('http') ? s : `https://${s}`) } catch { return null }
+  const host = u.hostname.replace(/^(www\.|m\.|music\.)/, '')
+  let id = null
+  if (host === 'youtu.be') id = u.pathname.slice(1).split('/')[0]
+  else if (/^youtube(-nocookie)?\.com$/.test(host)) {
+    id = u.searchParams.get('v') || (u.pathname.match(/^\/(?:embed|shorts|live|v)\/([\w-]{11})/) || [])[1]
+  }
+  if (!id || !YT_ID.test(id)) return null
+  // a timestamped share link (&t=90, &t=1m30s, ?start=90) keeps its start
+  const t = u.searchParams.get('t') || u.searchParams.get('start')
+  const start = t ? seconds(t) : 0
+  return start ? { id, start } : { id }
+}
+
+// '90' | '90s' | '1m30s' | '1h2m3s' → seconds
+function seconds(t) {
+  if (/^\d+$/.test(t)) return Number(t)
+  const m = String(t).match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/)
+  return m ? (Number(m[1] || 0) * 3600) + (Number(m[2] || 0) * 60) + Number(m[3] || 0) : 0
+}
+
+// Unlisted Vimeo videos carry a privacy hash (vimeo.com/123456/abc123def
+// or ?h=abc123def) that the player needs, so it's kept alongside the id.
+export function parseVimeo(ref) {
+  if (!ref) return null
+  const s = String(ref).trim()
+  if (/^\d{6,}$/.test(s)) return { id: s }
+  let u
+  try { u = new URL(s.startsWith('http') ? s : `https://${s}`) } catch { return null }
+  const host = u.hostname.replace(/^www\./, '')
+  if (host !== 'vimeo.com' && host !== 'player.vimeo.com') return null
+  const m = u.pathname.match(/(?:^|\/)(\d{6,})(?:\/([\da-f]{6,}))?(?:\/|$)/i)
+  if (!m) return null
+  const hash = m[2] || u.searchParams.get('h') || undefined
+  return hash ? { id: m[1], hash } : { id: m[1] }
+}
+
+// `duration` as people write it — 90, '1:30', '1:02:03' — or already in
+// ISO 8601 ('PT1M30S'), → ISO 8601 for structured data. '' if unreadable.
+export function isoDuration(d) {
+  if (d == null || d === '') return undefined
+  if (/^P(T?\d|\d)/.test(String(d))) return String(d)
+  const parts = typeof d === 'number' ? [d] : String(d).split(':').map(Number)
+  if (!parts.length || parts.length > 3 || parts.some((n) => !(n >= 0))) return ''
+  let total = parts.reduce((acc, n) => acc * 60 + n, 0)
+  const hrs = Math.floor(total / 3600); total -= hrs * 3600
+  const min = Math.floor(total / 60); const sec = Math.round(total - min * 60)
+  return `PT${hrs ? `${hrs}H` : ''}${min ? `${min}M` : ''}${sec || (!hrs && !min) ? `${sec}S` : ''}`
+}
+
+// An item's video reference, from `url` or `id` — whichever is set.
+export function hostedVideo(item) {
+  const ref = item.url || item.id
+  return item.type === 'youtube' ? parseYouTube(ref) : item.type === 'vimeo' ? parseVimeo(ref) : null
 }
 
 // Sorts a prose page's `media` the same way placeImages() sorts `images`:
@@ -73,10 +141,16 @@ export function checkMedia(media, where, localExists) {
       problems.push(`${label}: type "${item.type}" isn't recognized — expected one of: ${MEDIA_TYPES.join(', ')}`)
       continue
     }
-    const files = item.type === 'video' && Array.isArray(item.sources) && item.sources.length
+    const hosted = HOSTED.includes(item.type)
+    const files = hosted ? [] : item.type === 'video' && Array.isArray(item.sources) && item.sources.length
       ? item.sources.map((s) => s?.src)
       : [item.src]
-    if (!files.some(Boolean)) problems.push(`${label}: missing src`)
+    if (hosted) {
+      const name = item.type === 'youtube' ? 'YouTube' : 'Vimeo'
+      if (!item.url && !item.id) problems.push(`${label}: a ${name} video needs url: (the link from ${name}'s Share button) or id:`)
+      else if (!hostedVideo(item)) problems.push(`${label}: "${item.url || item.id}" isn't a ${name} video link — paste the link from ${name}'s Share button`)
+      if (item.start != null && !(Number(item.start) >= 0)) problems.push(`${label}: start should be a number of seconds, e.g. start: 90`)
+    } else if (!files.some(Boolean)) problems.push(`${label}: missing src`)
     for (const f of files.filter(Boolean)) {
       if (!isRemote(f) && !EXTENSIONS[item.type].includes(ext(f))) {
         problems.push(`${label}: "${f}" doesn't look like ${item.type === 'pdf' ? 'a PDF' : `a${item.type === 'audio' ? 'n' : ''} ${item.type} file`} — expected .${EXTENSIONS[item.type].join(' / .')}`)
@@ -84,12 +158,14 @@ export function checkMedia(media, where, localExists) {
     }
     // Every player and link needs a name: it's the accessible label, the
     // link text for a PDF, and what search engines see.
-    if (!item.title) problems.push(`${label}: "${files[0] || '?'}" has no title — screen readers announce it, and PDFs use it as the link text`)
+    if (!item.title) problems.push(`${label}: "${files[0] || item.url || item.id || '?'}" has no title — screen readers announce it, and PDFs use it as the link text`)
+    if (item.duration != null && !isoDuration(item.duration)) problems.push(`${label}: duration "${item.duration}" — use minutes:seconds like '3:45', or seconds`)
+    if (item.uploadDate != null && !/^\d{4}-\d{2}-\d{2}/.test(String(item.uploadDate))) problems.push(`${label}: uploadDate "${item.uploadDate}" — use YYYY-MM-DD`)
     if (item.layout && !MEDIA_LAYOUTS.includes(item.layout)) problems.push(`${label}: layout "${item.layout}" — expected one of: ${MEDIA_LAYOUTS.join(', ')}`)
     if (item.size && !MEDIA_SIZES.includes(item.size)) problems.push(`${label}: size "${item.size}" — expected sm, md or lg`)
     if (item.type === 'pdf' && item.display && !PDF_DISPLAYS.includes(item.display)) problems.push(`${label}: display "${item.display}" — expected link or inline`)
     if (item.captions != null) {
-      if (item.type !== 'video') problems.push(`${label}: captions only apply to video`)
+      if (item.type !== 'video') problems.push(`${label}: captions only apply to self-hosted video${hosted ? ` — turn captions on in ${item.type === 'youtube' ? 'YouTube' : 'Vimeo'} instead` : ''}`)
       else if (!Array.isArray(item.captions)) problems.push(`${label}: captions should be a list — [{ src: 'clip.en.vtt', lang: 'en', label: 'English' }]`)
       else for (const t of item.captions) {
         if (!t?.src) problems.push(`${label}: a captions entry is missing src`)
