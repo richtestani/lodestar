@@ -184,3 +184,35 @@ export function checkMedia(media, where, localExists) {
   }
   return problems
 }
+
+// Hero background video (`video` on the hero module) — see
+// components/media/useBackgroundVideo.js. Returns human-readable problems.
+const BG_VARIANTS = ['center', 'overlay']
+export function checkHeroVideo(props, where, localExists) {
+  const video = props?.video
+  if (video == null) return []
+  const label = `${where} hero video`
+  const problems = []
+  if (typeof video !== 'string' && (typeof video !== 'object' || Array.isArray(video))) {
+    return [`${label}: expected a filename ('loop.mp4') or { src, mobile, focus }`]
+  }
+  const variant = props.variant || 'center'
+  if (!BG_VARIANTS.includes(variant)) {
+    problems.push(`${label}: background video works with the center and overlay variants — this hero is "${variant}"`)
+  }
+  const v = typeof video === 'string' ? { src: video } : video
+  const files = (Array.isArray(v.sources) && v.sources.length ? v.sources.map((x) => x?.src) : [v.src]).filter(Boolean)
+  if (!files.length) problems.push(`${label}: missing src`)
+  if (typeof v.mobile === 'string') files.push(v.mobile)
+  else if (v.mobile != null && typeof v.mobile !== 'boolean') problems.push(`${label}: mobile should be false (poster only on phones) or a smaller file ('loop-small.mp4')`)
+  for (const f of files) {
+    if (parseYouTube(f) || parseVimeo(f)) {
+      problems.push(`${label}: "${f}" is a ${parseYouTube(f) ? 'YouTube' : 'Vimeo'} link — a background video has to be a file you host. Trim a short clip with ffmpeg (README → Hero video)`)
+    } else if (!isRemote(f) && !EXTENSIONS.video.includes(ext(f))) {
+      problems.push(`${label}: "${f}" doesn't look like a video file — expected .${EXTENSIONS.video.join(' / .')}`)
+    } else if (localExists && !isRemote(f) && !f.startsWith('/') && !localExists(f)) {
+      problems.push(`${label}: "${f}" isn't in src/assets/media/ — check the filename, or use a full URL`)
+    }
+  }
+  return problems
+}

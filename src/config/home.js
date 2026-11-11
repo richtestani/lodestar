@@ -28,6 +28,7 @@ export const homeSections = [
       title:    'Considered goods for everyday rituals.',
       subtitle: 'Small-batch homewares, made by hand and built to last.',
       image:    'https://picsum.photos/seed/dovetail-hero/1600/900',
+      // video: 'loop.mp4', // background video (center/overlay); image is its poster — README → Hero video
       primaryCta:   { label: 'Shop the collection', to: '/about' },
       secondaryCta: { label: 'Our story',           to: '/about' },
   }},

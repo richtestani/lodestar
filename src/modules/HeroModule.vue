@@ -1,6 +1,30 @@
 <template>
   <section class="hero" :class="[`hero--${variant}`, { 'no-media': usesMedia && !bg }]">
-    <div v-if="usesBg && bg" class="hero-bg" :style="{ backgroundImage: `url(${bg})` }" aria-hidden="true"></div>
+    <div v-if="usesBg && (bg || bgVideo.enabled.value)" class="hero-bg" :style="bg ? { backgroundImage: `url(${bg})` } : null" aria-hidden="true">
+      <!-- background video: the image above is its poster. Never in the
+           prerendered HTML; see components/media/useBackgroundVideo.js -->
+      <video
+        v-if="bgVideo.enabled.value"
+        :ref="(v) => (bgVideo.el.value = v)"
+        class="hero-video"
+        :class="{ 'is-playing': bgVideo.playing.value }"
+        :style="{ objectPosition: bgVideo.focus.value }"
+        muted loop playsinline preload="none"
+        disablepictureinpicture disableremoteplayback
+        tabindex="-1"
+        @playing="bgVideo.playing.value = true"
+      ></video>
+    </div>
+    <button
+      v-if="usesBg && bgVideo.playing.value"
+      type="button"
+      class="hero-video-toggle"
+      :aria-label="bgVideo.userPaused.value ? 'Play background video' : 'Pause background video'"
+      @click="bgVideo.toggle"
+    >
+      <svg v-if="bgVideo.userPaused.value" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" /></svg>
+      <svg v-else viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" /></svg>
+    </button>
     <div class="container hero-inner">
       <div class="hero-copy">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
@@ -20,6 +44,7 @@
 <script setup>
 import { computed } from 'vue'
 import { asset } from '@/composables/useAssets.js'
+import { useBackgroundVideo } from '@/components/media/useBackgroundVideo.js'
 const props = defineProps({
   // center | split | minimal | overlay | panel | stacked
   variant: { type: String, default: 'center' },
@@ -27,15 +52,34 @@ const props = defineProps({
   image: String, primaryCta: Object, secondaryCta: Object,
   // optional small line under the buttons ("Free 14-day trial · No card needed")
   note: String,
+  // background video for the center and overlay variants — `image` is its
+  // poster. 'loop.mp4' or { src, sources, mobile, focus }; see README → Hero video
+  video: [String, Object],
 })
 const bg        = computed(() => asset(props.image))
 const usesBg    = computed(() => ['center', 'overlay'].includes(props.variant)) // full-bleed background
 const usesMedia = computed(() => ['split', 'panel', 'stacked'].includes(props.variant)) // inline <img>
+const bgVideo   = useBackgroundVideo(() => (usesBg.value ? props.video : null))
 </script>
 
 <style scoped>
 .hero { position: relative; overflow: hidden; }
 .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 0; }
+
+/* background video: fades in over the poster once its first frame is up;
+   the variant's scrim (.hero-bg::after) stays on top of it */
+.hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.8s ease; }
+.hero-video.is-playing { opacity: 1; }
+.hero-video-toggle {
+  position: absolute; z-index: 2; right: clamp(0.75rem, 2vw, 1.5rem); bottom: clamp(0.75rem, 2vw, 1.5rem);
+  width: 2.5rem; height: 2.5rem; display: grid; place-items: center; padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45); color: #fff; cursor: pointer;
+  opacity: 0.75; transition: opacity 0.15s, background 0.15s;
+}
+.hero-video-toggle:hover, .hero-video-toggle:focus-visible { opacity: 1; background: rgba(0, 0, 0, 0.7); }
+.hero-video-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.hero-video-toggle svg { width: 1.1rem; height: 1.1rem; }
 .hero-inner { position: relative; z-index: 1; padding-block: var(--section-pad); }
 .hero-title { letter-spacing: var(--display-tracking, 0.04em); }
 .hero-sub { margin-top: 1.1rem; color: var(--text-muted); }
