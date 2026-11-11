@@ -21,7 +21,7 @@
         <p v-if="intro">{{ intro }}</p>
       </div>
       <div class="mmod-grid" :style="{ '--mmod-cols': cols }">
-        <MediaEmbed v-for="(item, i) in items" :key="(item.src || item.sources?.[0]?.src || '') + i" :item="item" />
+        <MediaEmbed v-for="(item, i) in items" :key="(item.src || item.url || item.id || item.sources?.[0]?.src || '') + i" :item="item" />
       </div>
     </div>
   </section>
@@ -39,9 +39,10 @@ const props = defineProps({
   columns: { type: Number, default: 1 },
 })
 
+const VIDEO = ['video', 'youtube', 'vimeo']
 const cols = computed(() => Math.min(Math.max(props.columns || 1, 1), 3))
 // a single video/track/PDF reads better at text width than stretched to 1200px
-const narrow = computed(() => cols.value === 1 && props.media.length > 0 && props.media.every((m) => m.type !== 'video'))
+const narrow = computed(() => cols.value === 1 && props.media.length > 0 && props.media.every((m) => !VIDEO.includes(m.type)))
 const items = computed(() => props.media.map(({ layout, size, after, ...rest }) => rest))
 </script>
 

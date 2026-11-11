@@ -15,6 +15,16 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   audio renders as a track card with `artist` and `artwork`; PDFs show as a
   link card or, with `display: 'inline'`, in the browser's viewer (link card
   only on phones). Starting one player pauses the others.
+- **YouTube and Vimeo embeds** (`type: 'youtube'` / `'vimeo'`) as click-to-load
+  facades: a thumbnail and play button until clicked, so no player script or
+  cookies on page load. Then `youtube-nocookie.com` or Vimeo with `dnt`. Paste
+  any share link (watch, `youtu.be`, Shorts, unlisted Vimeo); a YouTube link's
+  `?t=` sets the start. The facade is a real link, so it works without
+  JavaScript. A failed thumbnail falls back to a plain panel.
+- **Structured data for media.** Video and audio items emit schema.org
+  `VideoObject` / `AudioObject` JSON-LD into the prerendered HTML, with
+  absolute URLs from `VITE_SITE_URL`. New optional fields: `description`,
+  `uploadDate`, `duration` (`'3:45'` or seconds, converted to ISO 8601).
 - **`media` in prose pages.** `view: 'page'` pages and the `content` module
   take a `media` list placed with `after: N` like `images`, with `column`,
   `full-bleed` and `float-left` / `float-right` layouts.
@@ -28,7 +38,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ### Changed
 - **CSP** in `deploy/nginx.conf.txt` adds `media-src 'self'` and `'self'` to
   `frame-src` so local video/audio play and inline PDFs render. Update the
-  header on existing servers before using inline PDFs.
+  header on existing servers before using inline PDFs. `frame-src` also adds
+  `https://www.youtube-nocookie.com` and `https://player.vimeo.com` for embeds.
 - `deploy/.htaccess` sets `text/vtt` (and common video/audio types) so
   captions work on shared Apache hosts.
 - **Images in prose pages.** `view: 'page'` pages and the `content` module
