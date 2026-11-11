@@ -15,6 +15,17 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   audio renders as a track card with `artist` and `artwork`; PDFs show as a
   link card or, with `display: 'inline'`, in the browser's viewer (link card
   only on phones). Starting one player pauses the others.
+- **Video in the gallery.** A gallery's `images` can mix in video items
+  (self-hosted, YouTube, Vimeo — the Media shape, plus `category`). Tiles show
+  the poster or YouTube's thumbnail with a play badge (dark fallback if it
+  fails to load); the lightbox plays the video immediately and stops it on
+  next / previous / close. All four variants, filter chips and captions work
+  as with photos; with `lightbox: false`, videos still open. Each video adds
+  structured data. The build catches a video file or YouTube/Vimeo link
+  added as a photo, a missing poster, and non-video types.
+- **Lightbox:** ← / → are left to a focused video's own seek controls; Tab
+  can reach a player and can no longer escape the overlay past a video's
+  built-in controls; neighbors are preloaded only when they're photos.
 - **Hero background video.** `video` on the hero's `center` and `overlay`
   variants: muted, looping, with the hero `image` as its poster and the
   variant's tint on top. Skipped entirely (nothing downloaded) for reduced

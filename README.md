@@ -260,6 +260,11 @@ prop in the section's `props`:
   `captions: true`), and `filter: true` adds category chips built from
   `category`. Also `intro` and `surface: false` (no tinted band).
 
+**Video in the gallery.** A gallery's `images` list can mix in videos:
+self-hosted, YouTube or Vimeo, in the same shape as Media items. Tiles get
+a play badge and the video plays in the lightbox. See Media → Video in the
+gallery.
+
 **Gallery page.** A full-page gallery is just a `rows` page holding one
 `gallery` module; see `src/config/pages/gallery.js`. The lightbox is also its
 own component (`components/ui/Lightbox.vue`) if a custom module needs one.
@@ -510,6 +515,37 @@ subtitle tool, or `ffmpeg -i promo.srt promo.en.vtt`.
 byte ranges for static files, which is what makes seeking work. Captions must
 be served as `text/vtt`; `deploy/.htaccess` sets that for Apache, and the
 nginx file shows the line to add if an older `mime.types` lacks it.
+
+### Video in the gallery
+
+A gallery can hold videos alongside photos, or nothing but videos (a page of
+music videos, say), using the same grid variants, filter chips, captions and
+lightbox. Add items in the Media shape to the gallery's `images` list; anything
+without a `type` is a photo, exactly as before:
+
+```js
+{ module: 'gallery', props: {
+    title: 'Music videos', variant: 'grid', filter: true, captions: true,
+    images: [
+      { type: 'youtube', url: 'https://youtu.be/…', title: 'Neon Rain (official video)', category: 'Videos', uploadDate: '2026-03-14' },
+      { type: 'vimeo',   url: 'https://vimeo.com/…', title: 'Low Tide (live)', poster: 'low-tide.jpg', category: 'Live' },
+      { type: 'video',   src: 'soundcheck.mp4', title: 'Soundcheck', poster: 'soundcheck.jpg', category: 'Live' },
+      { src: 'stage.jpg', alt: 'Elle on stage', category: 'Photos' },
+    ],
+} }
+```
+
+- **Tiles** show the `poster`, or YouTube's own thumbnail. Self-hosted and
+  Vimeo videos need a `poster` (the build says so if one is missing). Video
+  tiles keep a video shape (`ratio`, default 16:9) in masonry, where photos
+  keep theirs.
+- **The lightbox** plays the video straight away. Next / previous / close
+  removes the player, which stops it. While a video has focus, ← / → seek
+  within it instead of changing items; Esc still closes.
+- **With `lightbox: false`,** photos just sit in the grid, but videos still
+  open (and step through only the videos).
+- `captions: true` prints each video's `caption`, or its `title` if it has
+  none. Each video also adds structured data, as in Media.
 
 ### Hero video
 

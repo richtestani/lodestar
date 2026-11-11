@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { media } from '@/composables/useAssets.js'
 import { hostedVideo } from './media.js'
 import { claimPlayback } from './singlePlayback.js'
@@ -59,6 +59,9 @@ const props = defineProps({
   poster: String,
   start: [Number, String], // seconds; a YouTube link's own &t= also works
   ratio: { type: String, default: '16/9' }, // '9/16' for Shorts / vertical video
+  // load the player straight away — for players opened by a click (the
+  // gallery lightbox), never for players sitting in a page
+  autoplay: Boolean,
 })
 
 const ref_ = computed(() => hostedVideo({ type: props.provider, url: props.url, id: props.id }) || {})
@@ -108,12 +111,14 @@ function stop() {
 
 async function play(e) {
   if (!ref_.value.id) return // bad link: let the browser follow it
-  e.preventDefault()
+  e?.preventDefault()
   release = claimPlayback(stop)
   active.value = true
   await nextTick()
-  frame.value?.focus() // keyboard users land in the player, not back at the top
+  if (e) frame.value?.focus() // keyboard users land in the player, not back at the top
 }
+
+onMounted(() => { if (props.autoplay) play() })
 
 onBeforeUnmount(() => release?.())
 </script>
