@@ -217,3 +217,45 @@ export function checkHeroVideo(props, where, localExists) {
   }
   return problems
 }
+
+// ── Video in the gallery ─────────────────────────────────────
+// A gallery's `images` list can mix in video items — the same shape as a
+// media item, plus the gallery's own `category`. Anything without a
+// `type` is a photo, exactly as before.
+export const GALLERY_VIDEO_TYPES = ['video', 'youtube', 'vimeo']
+export const isGalleryVideo = (item) => GALLERY_VIDEO_TYPES.includes(item?.type)
+export const youtubeThumb = (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+
+// '16/9' → 1.777…, for sizing a player to fit the screen
+export function ratioNumber(r, fallback = 16 / 9) {
+  const [w, h] = String(r || '').split('/').map(Number)
+  return w > 0 && h > 0 ? w / h : w > 0 && !h ? w : fallback
+}
+
+export function checkGallery(images, where, localExists) {
+  const problems = []
+  for (const [i, item] of (images || []).entries()) {
+    const label = `${where} images[${i}]`
+    if (!item || typeof item !== 'object') { problems.push(`${label}: expected { src, alt } or a video item`); continue }
+    if (item.type == null) {
+      // a video dropped in as if it were a photo renders as a broken image
+      if (item.src && !isRemote(item.src) && EXTENSIONS.video.includes(ext(item.src))) {
+        problems.push(`${label}: "${item.src}" is a video — add type: 'video', a title and a poster (README → Video in the gallery)`)
+      } else if (item.src && (parseYouTube(item.src) || parseVimeo(item.src))) {
+        problems.push(`${label}: "${item.src}" is a ${parseYouTube(item.src) ? 'YouTube' : 'Vimeo'} link — use { type: '${parseYouTube(item.src) ? 'youtube' : 'vimeo'}', url: '…', title: '…' }`)
+      }
+      continue
+    }
+    if (!isGalleryVideo(item)) {
+      problems.push(`${label}: type "${item.type}" can't go in a gallery — expected video, youtube or vimeo (or no type for a photo)`)
+      continue
+    }
+    // same rules as anywhere else media is used…
+    for (const p of checkMedia([item], where, localExists)) problems.push(p.replace(`${where} media[0]`, label))
+    // …plus a tile image: the grid shows a picture for every item
+    if (!item.poster && item.type !== 'youtube') {
+      problems.push(`${label}: "${item.title || item.src || item.url || '?'}" needs a poster — the gallery tile shows it${item.type === 'vimeo' ? ' (Vimeo has no public thumbnail)' : ''}`)
+    }
+  }
+  return problems
+}

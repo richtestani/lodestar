@@ -20,35 +20,57 @@
       </div>
 
       <div class="gal" :class="`gal--${variant}`">
-        <figure v-for="(img, i) in shown" :key="img.src + i" class="gal-item" :class="{ 'has-caption': captions && img.caption }">
+        <figure
+          v-for="(img, i) in shown"
+          :key="(img.src || img.url || img.id || '') + i"
+          class="gal-item"
+          :class="{ 'has-caption': captions && img.caption, 'gal-item--video': isGalleryVideo(img) }"
+          :style="isGalleryVideo(img) ? { '--gal-ratio': String(img.ratio || '16/9').replace('/', ' / ') } : null"
+        >
           <button
-            v-if="lightbox"
+            v-if="lightbox || isGalleryVideo(img)"
             type="button"
             class="gal-open"
-            :aria-label="`View ${img.alt || 'image ' + (i + 1)}`"
-            @click="openIndex = i"
+            :aria-label="isGalleryVideo(img) ? `Play video: ${img.title || 'video ' + (i + 1)}` : `View ${img.alt || 'image ' + (i + 1)}`"
+            @click="open(i)"
           >
-            <img :src="src(img.src)" :alt="img.alt || ''" loading="lazy" />
+            <img
+              v-if="!failed.has(tileSrc(img))"
+              :src="tileSrc(img)"
+              :alt="isGalleryVideo(img) ? '' : img.alt || ''"
+              loading="lazy"
+              @error="isGalleryVideo(img) && failed.add(tileSrc(img))"
+            />
+            <span v-if="isGalleryVideo(img)" class="gal-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M8.5 6v12l9.5-6z" /></svg>
+            </span>
           </button>
-          <img v-else :src="src(img.src)" :alt="img.alt || ''" loading="lazy" />
-          <figcaption v-if="captions && img.caption">{{ img.caption }}</figcaption>
+          <img v-else :src="tileSrc(img)" :alt="img.alt || ''" loading="lazy" />
+          <figcaption v-if="captions && (img.caption || (isGalleryVideo(img) && img.title))">{{ img.caption || img.title }}</figcaption>
+          <MediaSchema v-if="isGalleryVideo(img)" :item="img" />
         </figure>
       </div>
     </div>
 
-    <Lightbox v-if="lightbox" v-model:index="openIndex" :images="shown" :label="title || 'Gallery'" />
+    <!-- videos always open in the lightbox, even with lightbox: false
+         (photos then just sit in the grid) -->
+    <Lightbox v-if="lightbox || hasVideo" v-model:index="openIndex" :images="lightbox ? shown : shownVideos" :label="title || 'Gallery'" />
   </section>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { asset } from '@/composables/useAssets.js'
+import { computed, reactive, ref, watch } from 'vue'
+import { asset, media } from '@/composables/useAssets.js'
 import Lightbox from '@/components/ui/Lightbox.vue'
+import MediaSchema from '@/components/media/MediaSchema.js'
+import { isGalleryVideo, hostedVideo, youtubeThumb } from '@/components/media/media.js'
 
 const props = defineProps({
   eyebrow: String, title: { type: String, default: '' }, intro: String,
   // { src, alt, caption?, category?, full? } — `full` is an optional larger
-  // file for the lightbox; `category` feeds the filter chips.
+  // file for the lightbox; `category` feeds the filter chips. Videos mix in
+  // with the media shape: { type: 'youtube' | 'vimeo' | 'video', url | src,
+  // title, poster?, category?, caption? } — see README → Video in the gallery.
   images: { type: Array, default: () => [] },
   // grid | masonry | carousel | mosaic
   variant: { type: String, default: 'grid' },
@@ -74,6 +96,26 @@ const shown = computed(() =>
 
 // Lightbox steps through what's on screen, so changing the filter closes it.
 const openIndex = ref(null)
+
+// A video thumbnail that fails (deleted video, ad blocker, firewall) is
+// dropped, leaving the dark tile and play badge instead of a broken icon.
+const failed = reactive(new Set())
+
+// Tile picture: a photo's own file; a video's poster, or YouTube's thumbnail.
+function tileSrc(item) {
+  if (!isGalleryVideo(item)) return src(item.src)
+  if (item.poster) return media(item.poster)
+  const yt = item.type === 'youtube' && hostedVideo(item)
+  return yt ? youtubeThumb(yt.id) : ''
+}
+
+// With lightbox: false, only videos open — and the lightbox steps through
+// just the videos, so its index is the item's position among them.
+const hasVideo = computed(() => props.images.some(isGalleryVideo))
+const shownVideos = computed(() => shown.value.filter(isGalleryVideo))
+function open(i) {
+  openIndex.value = props.lightbox ? i : shownVideos.value.indexOf(shown.value[i])
+}
 watch(active, () => { openIndex.value = null })
 </script>
 
@@ -89,6 +131,24 @@ watch(active, () => { openIndex.value = null })
 }
 .gal-open:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
 .gal-open:focus-visible img { transform: scale(1.05); }
+
+/* video tiles: play badge, and video-shaped in masonry/carousel where
+   photos keep their own proportions */
+.gal-item--video { background: linear-gradient(135deg, #2a2a2a, #111); }
+.gal-item--video .gal-open { cursor: pointer; }
+/* masonry tiles size from their image; keep a video-shaped tile without one */
+.gal--masonry .gal-item--video .gal-open { aspect-ratio: var(--gal-ratio, 16 / 9); }
+.gal--masonry .gal-item--video img { aspect-ratio: var(--gal-ratio, 16 / 9); object-fit: cover; }
+.gal-play {
+  position: absolute; top: 50%; left: 50%; width: 3.5rem; height: 3.5rem;
+  transform: translate(-50%, -50%); display: grid; place-items: center;
+  border-radius: 50%; background: rgba(0, 0, 0, 0.55); color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); transition: background 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.gal-play svg { width: 1.6rem; height: 1.6rem; margin-left: 0.15rem; fill: currentColor; }
+.gal-open:hover .gal-play, .gal-open:focus-visible .gal-play { background: var(--primary); transform: translate(-50%, -50%) scale(1.08); }
+@media (prefers-reduced-motion: reduce) { .gal-play { transition: none; } }
 
 /* caption: overlaid along the bottom so every variant keeps its aspect ratio */
 .gal-item figcaption {

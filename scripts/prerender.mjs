@@ -260,7 +260,7 @@ async function validateModules(site, baseManifest) {
   // images and media in prose pages / content + media modules — bad layout
   // names, missing alt text or titles, and media files that don't exist
   const { checkImages } = await import(pathToFileURL(path.join(ROOT, 'src/components/prose/layouts.js')))
-  const { checkMedia, checkHeroVideo } = await import(pathToFileURL(path.join(ROOT, 'src/components/media/media.js')))
+  const { checkMedia, checkHeroVideo, checkGallery } = await import(pathToFileURL(path.join(ROOT, 'src/components/media/media.js')))
   const assetDirs = ['src/assets/media', 'src/assets/images'].map((d) => path.join(ROOT, d))
   const localExists = (name) => assetDirs.some((d) => fs.existsSync(path.join(d, name)))
   const contentModules = (list, where) => (list || []).forEach((s, i) => {
@@ -270,6 +270,7 @@ async function validateModules(site, baseManifest) {
     }
     if (s.module === 'media') errors.push(...checkMedia(s.props?.media, `${where} → media module #${i + 1}`, localExists))
     if (s.module === 'hero') errors.push(...checkHeroVideo(s.props, `${where} → hero #${i + 1}`, localExists))
+    if (s.module === 'gallery') errors.push(...checkGallery(s.props?.images, `${where} → gallery #${i + 1}`, localExists))
   })
   contentModules(site.homeSections, 'home')
   for (const p of site.pages || []) {

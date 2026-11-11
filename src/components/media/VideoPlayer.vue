@@ -8,6 +8,7 @@
 -->
 <template>
   <video
+    ref="el"
     class="mvideo"
     data-lodestar-player
     controls
@@ -33,7 +34,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { media } from '@/composables/useAssets.js'
 import { mimeFor } from './media.js'
 
@@ -49,7 +50,13 @@ const props = defineProps({
   ratio: { type: String, default: '16/9' }, // 'natural' = the file's own shape
   loop: Boolean,
   preload: { type: String, default: 'metadata' },
+  // start on mount — for players opened by a click (the gallery lightbox),
+  // never for players sitting in a page
+  autoplay: Boolean,
 })
+
+const el = ref(null)
+onMounted(() => { if (props.autoplay) el.value?.play().catch(() => {}) })
 
 const sourceList = computed(() => (props.sources?.length ? props.sources : [{ src: props.src }]).filter((s) => s?.src))
 const aspect = computed(() => (props.ratio === 'natural' ? 'auto' : String(props.ratio).replace('/', ' / ')))

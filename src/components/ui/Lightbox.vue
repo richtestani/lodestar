@@ -12,6 +12,10 @@
     { src, alt, caption?, full? }
   `full` is an optional larger file shown in the overlay while `src`
   stays the thumbnail; without it the overlay uses `src`.
+  Video items ({ type: 'video' | 'youtube' | 'vimeo', … }, the media
+  shape) play in the overlay, starting straight away. Moving to another
+  item or closing removes the player, which stops it. While a video has
+  focus, ← / → are left to its own seek controls.
 
   Controls: ← / → or swipe to move (wraps around), Esc / backdrop click /
   ✕ to close. Focus moves into the dialog on open, stays inside it while
@@ -45,7 +49,12 @@
 
         <figure class="lb-stage" @click.self="close">
           <Transition :name="dir === 1 ? 'lb-next' : 'lb-prev'" mode="out-in">
+            <div v-if="isGalleryVideo(current)" :key="index" class="lb-video" :style="{ '--lb-r': ratioNumber(current.ratio) }">
+              <HostedVideo v-if="current.type !== 'video'" v-bind="videoProps" :provider="current.type" autoplay />
+              <VideoPlayer v-else v-bind="videoProps" autoplay />
+            </div>
             <img
+              v-else
               :key="index"
               class="lb-img"
               :src="src(current.full || current.src)"
@@ -53,17 +62,21 @@
               draggable="false"
             />
           </Transition>
-          <figcaption v-if="current.caption" class="lb-caption">{{ current.caption }}</figcaption>
+          <figcaption v-if="current.caption || (isGalleryVideo(current) && current.title)" class="lb-caption">{{ current.caption || current.title }}</figcaption>
         </figure>
 
         <template v-if="images.length > 1">
-          <button type="button" class="lb-btn lb-nav lb-nav--prev" aria-label="Previous image" @click="go(-1)">
+          <button type="button" class="lb-btn lb-nav lb-nav--prev" aria-label="Previous" @click="go(-1)">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
           </button>
-          <button type="button" class="lb-btn lb-nav lb-nav--next" aria-label="Next image" @click="go(1)">
+          <button type="button" class="lb-btn lb-nav lb-nav--next" aria-label="Next" @click="go(1)">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
           </button>
         </template>
+        <!-- last stop in the tab order: wraps focus back to the start. Needed
+             because a video's built-in controls swallow Tab, so the keydown
+             trap never sees the press that would leave the dialog. -->
+        <span class="lb-sentinel" tabindex="0" @focus="closeBtn?.focus()"></span>
       </div>
     </Transition>
   </Teleport>
@@ -72,6 +85,10 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { asset } from '@/composables/useAssets.js'
+import VideoPlayer from '@/components/media/VideoPlayer.vue'
+import HostedVideo from '@/components/media/HostedVideo.vue'
+import { isGalleryVideo, ratioNumber } from '@/components/media/media.js'
+import { useSinglePlayback } from '@/components/media/singlePlayback.js'
 
 const props = defineProps({
   images: { type: Array, default: () => [] },
@@ -89,6 +106,13 @@ let opener = null
 const isOpen = computed(() => props.index != null && props.images.length > 0)
 const current = computed(() => props.images[props.index] || {})
 
+// a video item's player props: everything except gallery/schema keys
+const videoProps = computed(() => {
+  const { type, category, caption, full, alt, uploadDate, duration, description, layout, size, after, ...rest } = current.value
+  return rest
+})
+useSinglePlayback()
+
 function close() { emit('update:index', null) }
 
 function go(step) {
@@ -99,12 +123,17 @@ function go(step) {
 }
 
 // ── keyboard: arrows, Esc, and a Tab trap so focus can't wander behind the overlay ──
+// While a <video> has focus its own controls get the arrows (seeking).
+// (An embedded YouTube/Vimeo player keeps keystrokes to itself anyway.)
 function onKey(e) {
+  const inVideo = e.target?.tagName === 'VIDEO'
   if (e.key === 'Escape') { e.preventDefault(); close() }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); go(1) }
-  else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }
+  else if (e.key === 'ArrowRight' && !inVideo) { e.preventDefault(); go(1) }
+  else if (e.key === 'ArrowLeft' && !inVideo) { e.preventDefault(); go(-1) }
   else if (e.key === 'Tab') {
-    const btns = [...dialog.value.querySelectorAll('button')]
+    // everything focusable, players included — not just the buttons, or a
+    // lone video would be unreachable from the keyboard
+    const btns = [...dialog.value.querySelectorAll('button, video[controls], iframe, a[href]')]
     const first = btns[0], last = btns[btns.length - 1]
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
@@ -116,6 +145,7 @@ const startX = ref(null)
 let startY = 0
 function onPointerDown(e) {
   if (e.pointerType === 'mouse') return
+  if (e.target.closest?.('.lb-video')) return // dragging a video's scrubber isn't a swipe
   startX.value = e.clientX; startY = e.clientY
 }
 function onPointerUp(e) {
@@ -138,9 +168,17 @@ function lockScroll(on) {
   }
 }
 
+// photos only — "preloading" a video this way would download the whole file
 function preload(i) {
   const img = props.images[(i + props.images.length) % props.images.length]
-  if (img) new Image().src = src(img.full || img.src)
+  if (img && !isGalleryVideo(img)) new Image().src = src(img.full || img.src)
+}
+
+// Backstop for the Tab trap above: a <video>'s built-in controls swallow
+// Tab keydowns, so after its last control focus would slip out to the
+// page behind. If focus ever lands outside the open dialog, bring it back.
+function keepFocusInside(e) {
+  if (dialog.value && !dialog.value.contains(e.target)) closeBtn.value?.focus()
 }
 
 watch(isOpen, async (open) => {
@@ -148,9 +186,11 @@ watch(isOpen, async (open) => {
   if (open) {
     opener = document.activeElement
     lockScroll(true)
+    document.addEventListener('focusin', keepFocusInside)
     await nextTick()
     closeBtn.value?.focus()
   } else {
+    document.removeEventListener('focusin', keepFocusInside)
     lockScroll(false)
     opener?.focus?.({ preventScroll: true })
     opener = null
@@ -163,7 +203,10 @@ watch(() => props.index, (i) => {
 }, { immediate: true })
 
 // Navigating away (router link, back button) with the overlay open
-onBeforeUnmount(() => { if (isOpen.value) lockScroll(false) })
+onBeforeUnmount(() => {
+  document.removeEventListener('focusin', keepFocusInside)
+  if (isOpen.value) lockScroll(false)
+})
 </script>
 
 <style scoped>
@@ -186,6 +229,14 @@ onBeforeUnmount(() => { if (isOpen.value) lockScroll(false) })
   border-radius: calc(var(--radius) * 0.5);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
+.lb-sentinel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+.lb-video {
+  /* as wide as fits: the stage width, or the height available × the ratio */
+  width: min(100%, calc((100dvh - 9rem) * var(--lb-r, 1.7778)));
+  flex: none; -webkit-user-select: auto; user-select: auto;
+}
+.lb-video :deep(.mvideo), .lb-video :deep(.mhost) { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+@media (max-width: 600px) { .lb-video { width: min(100%, calc((100dvh - 10rem) * var(--lb-r, 1.7778))); } }
 .lb-caption {
   margin-top: 1rem; max-width: 60ch; text-align: center;
   color: rgba(255, 255, 255, 0.85); font-family: var(--font-body); font-size: 0.95rem; line-height: 1.5;

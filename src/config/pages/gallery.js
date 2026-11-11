@@ -12,6 +12,10 @@
 // thumbnails. Filenames resolve against src/assets/images/; full URLs
 // pass through.
 //
+// Videos can go in the same list — { type: 'youtube' | 'vimeo' | 'video',
+// url or src, title, poster, category } — with a play badge on the tile,
+// playing in the lightbox. README → Video in the gallery.
+//
 // Gallery props worth knowing for a page like this:
 //   variant  grid | masonry | carousel | mosaic   (masonry suits mixed shapes)
 //   surface  false — no tinted band behind a standalone page
