@@ -534,6 +534,7 @@ video: {
   sources: [{ src: 'stage-loop.webm' }, { src: 'stage-loop.mp4' }], // first one the browser can play
   mobile: 'stage-loop-small.mp4', // a lighter file for phones, or false for the poster only
   focus: 'center 30%',            // what stays in frame when the edges are cropped
+  controls: false,                // hide the pause button (see below)
 }
 ```
 
@@ -545,7 +546,11 @@ It's built to cost as little as possible:
   poster, fonts or text.
 - **Plays only while on screen**; scrolled past, it pauses.
 - **A pause button** in the corner, which accessibility guidelines require for
-  motion longer than five seconds.
+  motion longer than five seconds. `controls: false` hides it for loops meant
+  purely as ambience. That's a trade-off: visitors with reduced motion still
+  get only the poster, but nobody else can stop it, so the page no longer
+  meets WCAG 2.2.2. Keep those loops slow and subtle (no flashing, no fast
+  cuts), and leave the button on for sites with accessibility requirements.
 - **Never in the static HTML.** The build's prerender skips it, so the download
   can't start before those checks run.
 

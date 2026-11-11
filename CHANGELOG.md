@@ -20,7 +20,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   variant's tint on top. Skipped entirely (nothing downloaded) for reduced
   motion and Data Saver, and on phones with `mobile: false`; `mobile` can also
   name a lighter file. Loads after the page, plays only on screen, has a pause
-  button, and is never baked into the prerendered HTML. Logic lives in
+  button (`controls: false` hides it), and is never baked into the prerendered
+  HTML. Logic lives in
   `components/media/useBackgroundVideo.js` for reuse. The build fails on a
   YouTube/Vimeo link, a missing file, or an unsupported variant.
 - **YouTube and Vimeo embeds** (`type: 'youtube'` / `'vimeo'`) as click-to-load

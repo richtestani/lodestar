@@ -14,12 +14,14 @@
 // Otherwise it loads after the page has finished loading (so it never
 // competes with the poster, fonts or text), plays only while on screen,
 // and the visitor can pause it (WCAG 2.2.2: motion longer than five
-// seconds needs a pause control).
+// seconds needs a pause control). `controls: false` hides that button
+// for loops meant purely as ambience — see README → Hero video.
 //
 // Config, as the hero takes it:
 //   video: 'loop.mp4'
 //   video: { src: 'loop.mp4', mobile: 'loop-small.mp4', focus: 'center 30%' }
 //   video: { sources: [{ src: 'loop.webm' }, { src: 'loop.mp4' }], mobile: false }
+//   video: { src: 'loop.mp4', controls: false }   // no pause button
 // ============================================================
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { media } from '@/composables/useAssets.js'
@@ -117,5 +119,6 @@ export function useBackgroundVideo(videoConfig) {
   return {
     el, enabled, playing, userPaused, toggle,
     focus: computed(() => config.value?.focus || 'center'),
+    showControls: computed(() => config.value?.controls !== false),
   }
 }

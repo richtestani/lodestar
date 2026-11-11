@@ -194,7 +194,7 @@ export function checkHeroVideo(props, where, localExists) {
   const label = `${where} hero video`
   const problems = []
   if (typeof video !== 'string' && (typeof video !== 'object' || Array.isArray(video))) {
-    return [`${label}: expected a filename ('loop.mp4') or { src, mobile, focus }`]
+    return [`${label}: expected a filename ('loop.mp4') or { src, mobile, focus, controls }`]
   }
   const variant = props.variant || 'center'
   if (!BG_VARIANTS.includes(variant)) {
@@ -205,6 +205,7 @@ export function checkHeroVideo(props, where, localExists) {
   if (!files.length) problems.push(`${label}: missing src`)
   if (typeof v.mobile === 'string') files.push(v.mobile)
   else if (v.mobile != null && typeof v.mobile !== 'boolean') problems.push(`${label}: mobile should be false (poster only on phones) or a smaller file ('loop-small.mp4')`)
+  if (v.controls != null && typeof v.controls !== 'boolean') problems.push(`${label}: controls should be true or false (false hides the pause button)`)
   for (const f of files) {
     if (parseYouTube(f) || parseVimeo(f)) {
       problems.push(`${label}: "${f}" is a ${parseYouTube(f) ? 'YouTube' : 'Vimeo'} link — a background video has to be a file you host. Trim a short clip with ffmpeg (README → Hero video)`)

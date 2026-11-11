@@ -16,7 +16,7 @@
       ></video>
     </div>
     <button
-      v-if="usesBg && bgVideo.playing.value"
+      v-if="usesBg && bgVideo.playing.value && bgVideo.showControls.value"
       type="button"
       class="hero-video-toggle"
       :aria-label="bgVideo.userPaused.value ? 'Play background video' : 'Pause background video'"
@@ -53,7 +53,7 @@ const props = defineProps({
   // optional small line under the buttons ("Free 14-day trial · No card needed")
   note: String,
   // background video for the center and overlay variants — `image` is its
-  // poster. 'loop.mp4' or { src, sources, mobile, focus }; see README → Hero video
+  // poster. 'loop.mp4' or { src, sources, mobile, focus, controls }; see README → Hero video
   video: [String, Object],
 })
 const bg        = computed(() => asset(props.image))
