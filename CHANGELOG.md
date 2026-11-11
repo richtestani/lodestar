@@ -15,6 +15,15 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   audio renders as a track card with `artist` and `artwork`; PDFs show as a
   link card or, with `display: 'inline'`, in the browser's viewer (link card
   only on phones). Starting one player pauses the others.
+- **Hero background video.** `video` on the hero's `center` and `overlay`
+  variants: muted, looping, with the hero `image` as its poster and the
+  variant's tint on top. Skipped entirely (nothing downloaded) for reduced
+  motion and Data Saver, and on phones with `mobile: false`; `mobile` can also
+  name a lighter file. Loads after the page, plays only on screen, has a pause
+  button (`controls: false` hides it), and is never baked into the prerendered
+  HTML. Logic lives in
+  `components/media/useBackgroundVideo.js` for reuse. The build fails on a
+  YouTube/Vimeo link, a missing file, or an unsupported variant.
 - **YouTube and Vimeo embeds** (`type: 'youtube'` / `'vimeo'`) as click-to-load
   facades: a thumbnail and play button until clicked, so no player script or
   cookies on page load. Then `youtube-nocookie.com` or Vimeo with `dnt`. Paste

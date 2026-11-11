@@ -248,6 +248,7 @@ prop in the section's `props`:
   (`stacked`: centered copy with the image framed below it, like a product
   screenshot; with no image it becomes a compact centered page header). Any
   variant also takes an optional `note`, a small line under the buttons.
+  `center` and `overlay` take a background `video`; see Hero video.
 - **features** — `grid` (default) · `rows` (one feature per row, image and
   copy alternating sides; items can also carry `label`, `points: []` and `cta`).
   `surface: true|false` overrides the tinted band (on for grid, off for rows).
@@ -509,6 +510,67 @@ subtitle tool, or `ffmpeg -i promo.srt promo.en.vtt`.
 byte ranges for static files, which is what makes seeking work. Captions must
 be served as `text/vtt`; `deploy/.htaccess` sets that for Apache, and the
 nginx file shows the line to add if an older `mime.types` lacks it.
+
+### Hero video
+
+The hero's `center` and `overlay` variants take a muted, looping background
+video. The hero's `image` is its poster: it shows first, the video fades in
+over it once playing, and the variant's tint stays on top so the text reads
+the same as on a photo.
+
+```js
+{ module: 'hero', props: {
+    variant: 'overlay',
+    title: 'Elle Sera',
+    image: 'stage.jpg',   // poster — always set one
+    video: 'stage-loop.mp4',
+} }
+```
+
+Or with options:
+
+```js
+video: {
+  sources: [{ src: 'stage-loop.webm' }, { src: 'stage-loop.mp4' }], // first one the browser can play
+  mobile: 'stage-loop-small.mp4', // a lighter file for phones, or false for the poster only
+  focus: 'center 30%',            // what stays in frame when the edges are cropped
+  controls: false,                // hide the pause button (see below)
+}
+```
+
+It's built to cost as little as possible:
+
+- **No video at all** (nothing downloaded) for visitors with reduced motion
+  turned on, or with Data Saver on, and on phones when `mobile: false`.
+- **Loads last**, after the page has finished loading, so it never delays the
+  poster, fonts or text.
+- **Plays only while on screen**; scrolled past, it pauses.
+- **A pause button** in the corner, which accessibility guidelines require for
+  motion longer than five seconds. `controls: false` hides it for loops meant
+  purely as ambience. That's a trade-off: visitors with reduced motion still
+  get only the poster, but nobody else can stop it, so the page no longer
+  meets WCAG 2.2.2. Keep those loops slow and subtle (no flashing, no fast
+  cuts), and leave the button on for sites with accessibility requirements.
+- **Never in the static HTML.** The build's prerender skips it, so the download
+  can't start before those checks run.
+
+**The file.** Short (10–20s, looped), no audio, 720p is plenty under a tint,
+and small: aim for under 3–5MB. With ffmpeg, from any longer clip (`-ss` is
+where to start, `-t` how long):
+
+```
+ffmpeg -ss 00:01:10 -t 15 -i input.mp4 -an -vf "scale=1280:-2" -c:v libx264 -crf 28 -preset slow -movflags +faststart stage-loop.mp4
+ffmpeg -ss 00:01:10 -t 15 -i input.mp4 -an -vf "scale=640:-2"  -c:v libx264 -crf 30 -preset slow -movflags +faststart stage-loop-small.mp4
+```
+
+`-an` drops the audio track. A WebM version is optional (often smaller):
+`-c:v libvpx-vp9 -crf 38 -b:v 0` in place of the `libx264` options, saved as
+`.webm`.
+
+YouTube and Vimeo links don't work as backgrounds (their players can't be
+styled or kept quiet reliably); download the clip you're allowed to use, trim
+it as above, and host the file. The build fails on a YouTube/Vimeo link, a
+missing file, or `video` on a variant other than `center` / `overlay`.
 
 ## Build & deploy
 
