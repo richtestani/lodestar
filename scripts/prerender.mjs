@@ -172,30 +172,71 @@ async function prerenderRoutes(routes, baseUrl) {
     log(`${C.dim}    Windows: set PUPPETEER_EXECUTABLE_PATH="C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe" && npm run build${C.r}`)
     return 0
   }
+  // Load a route and return its rendered HTML.
+  //
+  // This used to be a single goto(…, { waitUntil: 'networkidle0' }), which
+  // waits for zero open requests and throws after 30s if any request never
+  // settles (a third-party embed, an analytics beacon, a streaming video, a
+  // browser that holds a connection open). One such page killed the whole
+  // build with no hint of which request was to blame.
+  //
+  // Now: wait for the HTML to parse and the app to mount, then give the
+  // network a bounded chance to go quiet (so data the page fetches still
+  // lands in the HTML). If it doesn't go quiet, name the stuck requests
+  // once and save the page anyway. A page only fails if it never renders.
+  const reported = new Set()
+  async function renderPage(url, label) {
+    const page = await browser.newPage()
+    const pending = new Map()
+    page.on('request', req => pending.set(req, req.url()))
+    page.on('requestfinished', req => pending.delete(req))
+    page.on('requestfailed', req => pending.delete(req))
+    const errors = []
+    page.on('pageerror', e => errors.push(e.message))
+
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
+      // The app has rendered once #app has children (index.html ships it empty).
+      const mounted = await page
+        .waitForFunction(() => document.querySelector('#app')?.children.length > 0, { timeout: 15000 })
+        .then(() => true, () => false)
+      if (!mounted) {
+        throw new Error(`${label}: the app never rendered.` + (errors.length ? ` JavaScript error: ${errors[0]}` : ''))
+      }
+
+      await page.waitForNetworkIdle({ idleTime: 500, timeout: 5000 }).catch(() => {
+        const stuck = [...new Set(pending.values())]
+          .map(u => u.startsWith(baseUrl) ? u.slice(baseUrl.length) || '/' : u)
+        const fresh = stuck.filter(u => !reported.has(u))
+        fresh.forEach(u => reported.add(u))
+        if (fresh.length) {
+          log(`${C.y}! ${label}: these requests never finished — saved the page anyway:${C.r}`)
+          for (const u of fresh.slice(0, 8)) log(`${C.y}    ${u}${C.r}`)
+        }
+      })
+      return await page.content()
+    } finally {
+      await page.close().catch(() => {})
+    }
+  }
+
   try {
     for (const route of routes) {
-      const page = await browser.newPage()
-      await page.goto(baseUrl + route, { waitUntil: 'networkidle0' })
-      await page.waitForSelector('#app', { timeout: 5000 }).catch(() => {})
-      const html = await page.content()
+      const label = route === '/' ? '/' : route + '/'
+      const html = await renderPage(baseUrl + route, label)
       const outPath = route === '/'
         ? path.join(OUT_DIR, 'index.html')
         : path.join(OUT_DIR, route.replace(/^\//, ''), 'index.html')
       fs.mkdirSync(path.dirname(outPath), { recursive: true })
       fs.writeFileSync(outPath, html)
-      log(`${C.g}✓${C.r} ${route === '/' ? '/' : route + '/'} ${C.dim}→ ${path.relative(ROOT, outPath)}${C.r}`)
-      await page.close()
+      log(`${C.g}✓${C.r} ${label} ${C.dim}→ ${path.relative(ROOT, outPath)}${C.r}`)
     }
 
     // 404.html: the app's Not Found page, rendered for a path no page
     // uses. Servers return it, with a 404 status, for any URL that isn't
     // a file (see deploy/). Overwrites the app-shell copy main() wrote.
-    const page = await browser.newPage()
-    await page.goto(baseUrl + '/__lodestar-not-found__', { waitUntil: 'networkidle0' })
-    await page.waitForSelector('#app', { timeout: 5000 }).catch(() => {})
-    fs.writeFileSync(path.join(OUT_DIR, '404.html'), await page.content())
+    fs.writeFileSync(path.join(OUT_DIR, '404.html'), await renderPage(baseUrl + '/__lodestar-not-found__', 'Not Found page'))
     log(`${C.g}✓${C.r} Not Found page ${C.dim}→ public/404.html${C.r}`)
-    await page.close()
   } finally {
     await browser.close()
   }
