@@ -10,7 +10,8 @@
 		"dev": "vite",
 		"build": "vite build && node scripts/prerender.mjs production",
 		"build:staging": "vite build --mode staging && node scripts/prerender.mjs staging",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"placeholders": "node scripts/placeholders.mjs"
 	},
 	"dependencies": {
 		"markdown-it-anchor": "^9.2.1",

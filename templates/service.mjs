@@ -24,7 +24,8 @@
 //     pages      array of page objects, written one per file to config/pages/
 // ============================================================
 
-const img = (seed, w = 1600, h = 900) => `https://picsum.photos/seed/${seed}/${w}/${h}`
+// Bundled placeholder images (src/assets/placeholders/) — no stock photo service.
+const ph = (shape, n) => `ph-${shape}-${String(n).padStart(2, '0')}.webp`
 
 export default {
   name: 'service',
@@ -96,7 +97,7 @@ export default {
           variant:  'stacked',      // centered copy, product shot below
           title:    'Everything your business needs to grow, in one place.',
           subtitle: tagline || `${brand} gives small teams the tools and the people to win more work and keep the clients they have.`,
-          image:    img('service-hero', 1920, 1080),
+          image:    ph('wide', 2),
           primaryCta:   { label: 'Get started', to: '/contact' },
           secondaryCta: { label: 'See how it works', to: '/features' },
           note:     'Free consultation · No long-term contracts',
@@ -125,15 +126,15 @@ export default {
             { label: 'Win work', title: 'Turn interest into booked clients',
               text:  'Clear service pages, instant quotes and online booking mean fewer back-and-forth emails and more signed jobs.',
               points: ['Online booking and quotes', 'Automatic follow-ups', 'Works on every device'],
-              image: img('service-row-1', 1200, 900), cta: { label: 'Explore features', to: '/features' } },
+              image: ph('card', 1), cta: { label: 'Explore features', to: '/features' } },
             { label: 'Keep clients', title: 'Give every customer a great experience',
               text:  'A private portal for each client with their history, files and invoices — so they never have to ask twice.',
               points: ['Client portal', 'Shared files and approvals', 'Branded emails'],
-              image: img('service-row-2', 1200, 900), cta: { label: 'See customer stories', to: '/customers' } },
+              image: ph('card', 2), cta: { label: 'See customer stories', to: '/customers' } },
             { label: 'Get paid', title: 'Billing that runs itself',
               text:  'Recurring invoices, card and bank payments, and reminders that go out on their own. Cash flow stops being a chore.',
               points: ['Recurring billing', 'Card + ACH payments', 'Real-time reporting'],
-              image: img('service-row-3', 1200, 900), cta: { label: 'Compare plans', to: '/pricing' } },
+              image: ph('card', 3), cta: { label: 'Compare plans', to: '/pricing' } },
           ],
       }},
 
@@ -156,13 +157,13 @@ export default {
             items: [
               { label: 'Booking', title: 'Let clients book themselves',
                 text: 'Share a link or embed it on your site. Availability, reminders and rescheduling are all handled for you.',
-                points: ['Live availability', 'SMS + email reminders', 'Buffer times and limits'], image: img('feat-1', 1200, 900) },
+                points: ['Live availability', 'SMS + email reminders', 'Buffer times and limits'], image: ph('card', 4) },
               { label: 'Projects', title: 'Every job, start to finish',
                 text: 'Track tasks, files and conversations per client so nothing slips through the cracks when the team gets busy.',
-                points: ['Task boards', 'File sharing', 'Internal notes'], image: img('feat-2', 1200, 900) },
+                points: ['Task boards', 'File sharing', 'Internal notes'], image: ph('card', 5) },
               { label: 'Reporting', title: 'Know where the business stands',
                 text: 'Revenue, utilization and pipeline on one screen — updated live, exportable whenever your accountant asks.',
-                points: ['Live dashboards', 'Scheduled reports', 'CSV export'], image: img('feat-3', 1200, 900) },
+                points: ['Live dashboards', 'Scheduled reports', 'CSV export'], image: ph('card', 6) },
             ],
         }},
         { module: 'features', props: {
@@ -218,7 +219,7 @@ export default {
       items: [
         { slug: 'northwind', name: 'Northwind Logistics', price: '3× faster onboarding',
           tagline: 'How a 40-person team replaced three tools in a week.',
-          image: img('case-northwind', 1200, 900),
+          image: ph('photo', 1),
           description: [
             'Northwind was running scheduling, billing and client messages in three separate systems, with a spreadsheet stitching them together.',
             `After moving to ${brand}, new clients go from signed contract to first job in two days instead of six — and the spreadsheet is gone.`,
@@ -227,7 +228,7 @@ export default {
           cta: { label: 'Get results like this', to: '/contact' } },
         { slug: 'fieldnote', name: 'Fieldnote Studio', price: '+30% repeat revenue',
           tagline: 'A design studio that turned one-off projects into retainers.',
-          image: img('case-fieldnote', 1200, 900),
+          image: ph('photo', 2),
           description: [
             'Fieldnote did great work, but most clients left after a single project.',
             'The client portal and recurring billing made it easy to offer ongoing retainers — within a year, a third of revenue was recurring.',
@@ -236,7 +237,7 @@ export default {
           cta: { label: 'Get results like this', to: '/contact' } },
         { slug: 'harbor-co', name: 'Harbor & Co.', price: '12 hrs/week saved',
           tagline: 'Getting the owner out of the inbox and back on the job.',
-          image: img('case-harbor', 1200, 900),
+          image: ph('photo', 3),
           description: [
             'Harbor\'s owner spent every evening answering scheduling emails and chasing invoices.',
             'Self-serve booking and automatic reminders now handle most of it. That\'s twelve hours a week back — and fewer missed payments.',
@@ -263,7 +264,7 @@ export default {
         }},
         { module: 'team', props: {
             eyebrow: 'The team', title: 'The people you will talk to',
-            members: [1, 2, 3, 4].map(i => ({ name: 'Full Name', role: 'Role / Title', image: img(`svc-team-${i}`, 400, 400), bio: 'One line about this person.' })),
+            members: [1, 2, 3, 4].map(i => ({ name: 'Full Name', role: 'Role / Title', image: ph('avatar', i), bio: 'One line about this person.' })),
         }},
         cta,
       ),

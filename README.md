@@ -347,6 +347,36 @@ a full-size camera or phone photo without shipping megabytes. Images in prose
 pages use these automatically through `srcset`; the widths live in
 `useAssets.js`. SVG and GIF are left as-is.
 
+### Placeholder images
+
+Starter and demo content uses bundled placeholders from
+`src/assets/placeholders/`: abstract gradients in five shapes plus neutral
+avatars, so a build never reaches out to a stock-photo service.
+
+| Shape | Files | Size |
+|---|---|---|
+| 16:9 (heroes, parallax) | `ph-wide-01` … `04` | 1920×1080 |
+| 3:2 (photos, case studies) | `ph-photo-01` … `04` | 1500×1000 |
+| 4:3 (cards, features, products) | `ph-card-01` … `06` | 1200×900 |
+| 1:1 (galleries) | `ph-square-01` … `06` | 1000×1000 |
+| 4:5 (portrait tiles) | `ph-portrait-01` … `04` | 1200×1500 |
+| 1:1 (team) | `ph-avatar-01` … `06` | 600×600 |
+
+All are `.webp`, about 220 KB for the whole set. Reference them like any image
+(`image: 'ph-card-02.webp'`). `asset()` checks `src/assets/images/` first, then
+this folder.
+
+- **Tint them to the brand:** `npm run placeholders -- --accent #3fc1b4`
+  regenerates the set around that color. With no `--accent` you get the neutral
+  default set. Output is deterministic.
+- **The build tells you what's left:** `npm run build` ends with a list of
+  every page still showing a placeholder, so none ship by accident.
+- **When you're done**, replace them with real files in `src/assets/images/`
+  and delete `src/assets/placeholders/`. Anything still pointing at a deleted
+  placeholder gets the usual dev warning.
+- They're abstract on purpose: nothing to license if Lodestar is
+  redistributed, and no photos of real people standing in for someone's team.
+
 ### Images in prose pages
 
 A `view: 'page'` page (and the `content` module) takes an `images` list.

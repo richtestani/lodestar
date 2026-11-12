@@ -192,7 +192,7 @@ function showThemeColors(theme) {
 // ── Module starter content (so the generated site renders) ──
 function starters(brand) {
   return {
-    hero: { variant:'center', eyebrow:brand, title:'A clear headline about what you do.', subtitle:'One sentence that says who it is for and why it matters.', image:'https://picsum.photos/seed/hero/1600/900', primaryCta:{label:'Get started',to:'/contact'}, secondaryCta:{label:'Learn more',to:'/about'} },
+    hero: { variant:'center', eyebrow:brand, title:'A clear headline about what you do.', subtitle:'One sentence that says who it is for and why it matters.', image:'ph-wide-01.webp', primaryCta:{label:'Get started',to:'/contact'}, secondaryCta:{label:'Learn more',to:'/about'} },
     features: { eyebrow:'Why us', title:'What we do well', columns:3, items:[
       {icon:'✦', title:'First benefit', text:'Describe a concrete thing you do better than anyone else.'},
       {icon:'◈', title:'Second benefit', text:'Keep it specific and customer-facing, not internal jargon.'},
@@ -204,7 +204,7 @@ function starters(brand) {
       {quote:'Mention a result or a feeling. Real names build trust.', author:'Client Name', role:'Title / Company'},
       {quote:'Three quotes fill the row nicely on desktop.', author:'Client Name', role:'Title / Company'},
     ]},
-    gallery: { eyebrow:'Our work', title:'Recent highlights', images:[1,2,3,4,5,6].map(i => ({ src:`https://picsum.photos/seed/g${i}/800/800`, alt:'Replace with your image' })) },
+    gallery: { eyebrow:'Our work', title:'Recent highlights', images:[1,2,3,4,5,6].map(i => ({ src:`ph-square-0${i}.webp`, alt:'Replace with your image' })) },
     menu: { eyebrow:'Menu', title:'A taste of what we offer', groups:[
       {name:'Starters', items:[ {name:'Dish name', desc:'A few words about it.', price:'$9'}, {name:'Dish name', desc:'A few words about it.', price:'$11'} ]},
       {name:'Mains', items:[ {name:'Dish name', desc:'A few words about it.', price:'$18'}, {name:'Dish name', desc:'A few words about it.', price:'$22'} ]},
@@ -214,7 +214,7 @@ function starters(brand) {
       {name:'Pro', price:'$29', period:'mo', featured:true, features:['Everything in Starter','Feature four','Feature five'], cta:{label:'Choose',to:'/contact'}},
       {name:'Team', price:'$79', period:'mo', features:['Everything in Pro','Feature six','Priority support'], cta:{label:'Choose',to:'/contact'}},
     ]},
-    team: { eyebrow:'Our team', title:'The people behind it', members:[1,2,3].map(i => ({ name:'Full Name', role:'Role / Title', image:`https://picsum.photos/seed/t${i}/400/400`, bio:'One line about this person.' })) },
+    team: { eyebrow:'Our team', title:'The people behind it', members:[1,2,3].map(i => ({ name:'Full Name', role:'Role / Title', image:`ph-avatar-0${i}.webp`, bio:'One line about this person.' })) },
     faq: { eyebrow:'Good to know', title:'Frequently asked', items:[
       {q:'A common question?', a:'A clear, friendly answer in your own voice.'},
       {q:'Another one?', a:'Keep answers short; link out for detail when needed.'},
@@ -500,7 +500,10 @@ async function main() {
     `(\`site.js\` for brand/contact, \`nav.js\`, \`footer.js\`, \`home.js\`, \`pages/<slug>.js\` for other pages).\n` +
     `Switch the look by changing \`theme\` in **src/config/site.js** (${THEMES.join(', ')}); ` +
     `colors, type and fonts all follow. Per-site tweaks like an accent color go in **src/themes/overrides.css**. ` +
-    `Drop images into **src/assets/images/**.\n\n` +
+    `Drop images into **src/assets/images/** and reference them by filename. ` +
+    `Until then, starter content uses the abstract placeholders in **src/assets/placeholders/** ` +
+    `(\`npm run placeholders -- --accent #hex\` re-tints them); \`npm run build\` lists every page still using one. ` +
+    `Delete that folder once nothing references it.\n\n` +
     (docs
       ? `Docs live in **src/content/docs/**: each .md file is a page at /docs/<file-name> ` +
         `(\`title:\` and \`order:\` in its frontmatter). Replace the placeholders with real ones.\n\n`

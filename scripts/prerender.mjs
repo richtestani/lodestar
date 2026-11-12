@@ -220,10 +220,17 @@ async function prerenderRoutes(routes, baseUrl) {
     }
   }
 
+  // Bundled placeholder images (src/assets/placeholders/) still on a page.
+  // Built assets keep their name before the hash: /assets/ph-wide-01-a1B2c3.webp
+  const placeholdersByPage = []
+  const PLACEHOLDER = /\/assets\/(ph-[a-z]+-\d{2})-[\w-]+\.(?:webp|png|jpe?g|svg)/g
+
   try {
     for (const route of routes) {
       const label = route === '/' ? '/' : route + '/'
       const html = await renderPage(baseUrl + route, label)
+      const used = [...new Set([...html.matchAll(PLACEHOLDER)].map(m => m[1]))].sort()
+      if (used.length) placeholdersByPage.push([label, used])
       const outPath = route === '/'
         ? path.join(OUT_DIR, 'index.html')
         : path.join(OUT_DIR, route.replace(/^\//, ''), 'index.html')
@@ -237,6 +244,14 @@ async function prerenderRoutes(routes, baseUrl) {
     // a file (see deploy/). Overwrites the app-shell copy main() wrote.
     fs.writeFileSync(path.join(OUT_DIR, '404.html'), await renderPage(baseUrl + '/__lodestar-not-found__', 'Not Found page'))
     log(`${C.g}✓${C.r} Not Found page ${C.dim}→ public/404.html${C.r}`)
+
+    if (placeholdersByPage.length) {
+      const n = new Set(placeholdersByPage.flatMap(([, u]) => u)).size
+      log(`\n${C.y}! ${n} placeholder image${n === 1 ? '' : 's'} still in use — replace before launch:${C.r}`)
+      const width = Math.max(...placeholdersByPage.map(([l]) => l.length))
+      for (const [label, used] of placeholdersByPage) log(`${C.y}    ${label.padEnd(width)}  ${used.join(', ')}${C.r}`)
+      log(`${C.dim}  Put real images in src/assets/images/ and reference them by filename instead.${C.r}`)
+    }
   } finally {
     await browser.close()
   }
@@ -302,7 +317,7 @@ async function validateModules(site, baseManifest) {
   // names, missing alt text or titles, and media files that don't exist
   const { checkImages } = await import(pathToFileURL(path.join(ROOT, 'src/components/prose/layouts.js')))
   const { checkMedia, checkHeroVideo, checkGallery } = await import(pathToFileURL(path.join(ROOT, 'src/components/media/media.js')))
-  const assetDirs = ['src/assets/media', 'src/assets/images'].map((d) => path.join(ROOT, d))
+  const assetDirs = ['src/assets/media', 'src/assets/images', 'src/assets/placeholders'].map((d) => path.join(ROOT, d))
   const localExists = (name) => assetDirs.some((d) => fs.existsSync(path.join(d, name)))
   const contentModules = (list, where) => (list || []).forEach((s, i) => {
     if (s.module === 'content') {

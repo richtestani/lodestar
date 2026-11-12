@@ -11,6 +11,15 @@ for (const path in files) {
   byName[name] = files[path]
 }
 
+// Bundled placeholders (ph-wide-01.webp, ph-avatar-03.webp, …) — abstract
+// stand-ins for demo and starter content, so nothing reaches out to a stock
+// photo service. Checked after src/assets/images/. Regenerate or tint them
+// with `npm run placeholders`; the production build lists any page still
+// using one. Delete the folder once a site no longer needs them.
+const placeholderFiles = import.meta.glob('../assets/placeholders/*.{webp,png,jpg,svg}', { eager: true, query: '?url&no-inline', import: 'default' })
+const placeholderByName = {}
+for (const path in placeholderFiles) placeholderByName[path.split('/').pop()] = placeholderFiles[path]
+
 // Responsive versions of raster images (vite-imagetools, see vite.config.js).
 // Each photo in src/assets/images/ is resized to these widths and converted
 // to WebP at build time, so a 5MB phone photo never ships as-is. SVG and GIF
@@ -46,6 +55,7 @@ export function media(ref) {
   if (/^(https?:)?\/\//.test(ref) || ref.startsWith('data:') || ref.startsWith('/')) return ref
   if (mediaByName[ref]) return mediaByName[ref]
   if (byName[ref]) return byName[ref]
+  if (placeholderByName[ref]) return placeholderByName[ref]
   warnMissing(ref, 'src/assets/media/', Object.keys(mediaByName))
   return ref
 }
@@ -62,6 +72,7 @@ export function asset(ref) {
   // Root-relative paths ('/og.png') point at public/ — not ours to check.
   if (ref.startsWith('/')) return ref
   if (byName[ref]) return byName[ref]
+  if (placeholderByName[ref]) return placeholderByName[ref]
   warnMissing(ref, 'src/assets/images/', Object.keys(byName))
   return ref
 }

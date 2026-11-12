@@ -8,52 +8,15 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
-- **Media: video, audio and PDFs.** Native players with no library
-  (`components/media/`). Files go in the new `src/assets/media/` folder (copied
-  to the build with a content hash, never inlined), or use a full URL. Video
-  takes `poster`, WebVTT `captions`, `ratio`, `loop` and multiple `sources`;
-  audio renders as a track card with `artist` and `artwork`; PDFs show as a
-  link card or, with `display: 'inline'`, in the browser's viewer (link card
-  only on phones). Starting one player pauses the others.
-- **Video in the gallery.** A gallery's `images` can mix in video items
-  (self-hosted, YouTube, Vimeo — the Media shape, plus `category`). Tiles show
-  the poster or YouTube's thumbnail with a play badge (dark fallback if it
-  fails to load); the lightbox plays the video immediately and stops it on
-  next / previous / close. All four variants, filter chips and captions work
-  as with photos; with `lightbox: false`, videos still open. Each video adds
-  structured data. The build catches a video file or YouTube/Vimeo link
-  added as a photo, a missing poster, and non-video types.
-- **Lightbox:** ← / → are left to a focused video's own seek controls; Tab
-  can reach a player and can no longer escape the overlay past a video's
-  built-in controls; neighbors are preloaded only when they're photos.
-- **Hero background video.** `video` on the hero's `center` and `overlay`
-  variants: muted, looping, with the hero `image` as its poster and the
-  variant's tint on top. Skipped entirely (nothing downloaded) for reduced
-  motion and Data Saver, and on phones with `mobile: false`; `mobile` can also
-  name a lighter file. Loads after the page, plays only on screen, has a pause
-  button (`controls: false` hides it), and is never baked into the prerendered
-  HTML. Logic lives in
-  `components/media/useBackgroundVideo.js` for reuse. The build fails on a
-  YouTube/Vimeo link, a missing file, or an unsupported variant.
-- **YouTube and Vimeo embeds** (`type: 'youtube'` / `'vimeo'`) as click-to-load
-  facades: a thumbnail and play button until clicked, so no player script or
-  cookies on page load. Then `youtube-nocookie.com` or Vimeo with `dnt`. Paste
-  any share link (watch, `youtu.be`, Shorts, unlisted Vimeo); a YouTube link's
-  `?t=` sets the start. The facade is a real link, so it works without
-  JavaScript. A failed thumbnail falls back to a plain panel.
-- **Structured data for media.** Video and audio items emit schema.org
-  `VideoObject` / `AudioObject` JSON-LD into the prerendered HTML, with
-  absolute URLs from `VITE_SITE_URL`. New optional fields: `description`,
-  `uploadDate`, `duration` (`'3:45'` or seconds, converted to ISO 8601).
-- **`media` in prose pages.** `view: 'page'` pages and the `content` module
-  take a `media` list placed with `after: N` like `images`, with `column`,
-  `full-bleed` and `float-left` / `float-right` layouts.
-- **`media` module** for home and `rows` pages: one featured video, or a 1–3
-  column grid of tracks, clips or PDF cards, with `eyebrow` / `title` /
-  `intro` / `surface`.
-- **Build checks for media**: missing `title`, unknown type or layout, a file
-  extension that doesn't match its type, non-`.vtt` captions or a missing
-  `lang`, and local filenames that don't exist all fail the build.
+- **Bundled placeholder images** (`src/assets/placeholders/`). 30 abstract
+  WebP placeholders (16:9, 3:2, 4:3, 1:1, 4:5 and neutral avatars, about
+  220 KB total) replace every picsum.photos URL in the demo config, `setup.mjs`
+  starter content and the service template, so builds and page views never
+  depend on a stock-photo service. `asset()` falls back to the folder after
+  `src/assets/images/`. `npm run placeholders -- --accent #hex` regenerates
+  the set tinted to a brand color.
+- **Placeholder report at build time.** The prerender ends with a list of
+  every page still showing a placeholder image.
 
 ### Changed
 - **CSP** in `deploy/nginx.conf.txt` adds `media-src 'self'` and `'self'` to
@@ -125,6 +88,57 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 - `flush: true` on a `rows`-page row removes the gap below it.
 
 ### Fixed
+- **Prerender no longer fails on requests that never finish.** Each page waits
+  for the app to render, then up to 5s for the network to go quiet. Stuck
+  requests are named once and the page is saved anyway. Previously one slow
+  third-party request (e.g. a placeholder image service) timed out the whole
+  build after 30s without saying which.
+- **Media: video, audio and PDFs.** Native players with no library
+  (`components/media/`). Files go in the new `src/assets/media/` folder (copied
+  to the build with a content hash, never inlined), or use a full URL. Video
+  takes `poster`, WebVTT `captions`, `ratio`, `loop` and multiple `sources`;
+  audio renders as a track card with `artist` and `artwork`; PDFs show as a
+  link card or, with `display: 'inline'`, in the browser's viewer (link card
+  only on phones). Starting one player pauses the others.
+- **Video in the gallery.** A gallery's `images` can mix in video items
+  (self-hosted, YouTube, Vimeo — the Media shape, plus `category`). Tiles show
+  the poster or YouTube's thumbnail with a play badge (dark fallback if it
+  fails to load); the lightbox plays the video immediately and stops it on
+  next / previous / close. All four variants, filter chips and captions work
+  as with photos; with `lightbox: false`, videos still open. Each video adds
+  structured data. The build catches a video file or YouTube/Vimeo link
+  added as a photo, a missing poster, and non-video types.
+- **Lightbox:** ← / → are left to a focused video's own seek controls; Tab
+  can reach a player and can no longer escape the overlay past a video's
+  built-in controls; neighbors are preloaded only when they're photos.
+- **Hero background video.** `video` on the hero's `center` and `overlay`
+  variants: muted, looping, with the hero `image` as its poster and the
+  variant's tint on top. Skipped entirely (nothing downloaded) for reduced
+  motion and Data Saver, and on phones with `mobile: false`; `mobile` can also
+  name a lighter file. Loads after the page, plays only on screen, has a pause
+  button (`controls: false` hides it), and is never baked into the prerendered
+  HTML. Logic lives in
+  `components/media/useBackgroundVideo.js` for reuse. The build fails on a
+  YouTube/Vimeo link, a missing file, or an unsupported variant.
+- **YouTube and Vimeo embeds** (`type: 'youtube'` / `'vimeo'`) as click-to-load
+  facades: a thumbnail and play button until clicked, so no player script or
+  cookies on page load. Then `youtube-nocookie.com` or Vimeo with `dnt`. Paste
+  any share link (watch, `youtu.be`, Shorts, unlisted Vimeo); a YouTube link's
+  `?t=` sets the start. The facade is a real link, so it works without
+  JavaScript. A failed thumbnail falls back to a plain panel.
+- **Structured data for media.** Video and audio items emit schema.org
+  `VideoObject` / `AudioObject` JSON-LD into the prerendered HTML, with
+  absolute URLs from `VITE_SITE_URL`. New optional fields: `description`,
+  `uploadDate`, `duration` (`'3:45'` or seconds, converted to ISO 8601).
+- **`media` in prose pages.** `view: 'page'` pages and the `content` module
+  take a `media` list placed with `after: N` like `images`, with `column`,
+  `full-bleed` and `float-left` / `float-right` layouts.
+- **`media` module** for home and `rows` pages: one featured video, or a 1–3
+  column grid of tracks, clips or PDF cards, with `eyebrow` / `title` /
+  `intro` / `surface`.
+- **Build checks for media**: missing `title`, unknown type or layout, a file
+  extension that doesn't match its type, non-`.vtt` captions or a missing
+  `lang`, and local filenames that don't exist all fail the build.
 - `itemDetail`'s facts box used `--surface-2` (the dark footer panel) with
   normal text color, so it was dark-on-dark in light themes. It now uses
   `--surface` with a border.

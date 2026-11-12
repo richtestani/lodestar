@@ -27,7 +27,7 @@ export const homeSections = [
       eyebrow:  'Dovetail & Co.',
       title:    'Considered goods for everyday rituals.',
       subtitle: 'Small-batch homewares, made by hand and built to last.',
-      image:    'https://picsum.photos/seed/dovetail-hero/1600/900',
+      image:    'ph-wide-01.webp',
       // video: 'loop.mp4', // background video (center/overlay); image is its poster — README → Hero video
       primaryCta:   { label: 'Shop the collection', to: '/about' },
       secondaryCta: { label: 'Our story',           to: '/about' },
@@ -58,12 +58,12 @@ export const homeSections = [
       eyebrow: 'The Collection',
       title:   'A look at recent work',
       images: [
-        { src: 'https://picsum.photos/seed/nw1/800/800', alt: 'Ceramic mugs' },
-        { src: 'https://picsum.photos/seed/nw2/800/800', alt: 'Linen napkins' },
-        { src: 'https://picsum.photos/seed/nw3/800/800', alt: 'Cutting board' },
-        { src: 'https://picsum.photos/seed/nw4/800/800', alt: 'Glassware' },
-        { src: 'https://picsum.photos/seed/nw5/800/800', alt: 'Woven basket' },
-        { src: 'https://picsum.photos/seed/nw6/800/800', alt: 'Brass utensils' },
+        { src: 'ph-square-01.webp', alt: 'Ceramic mugs' },
+        { src: 'ph-square-02.webp', alt: 'Linen napkins' },
+        { src: 'ph-square-03.webp', alt: 'Cutting board' },
+        { src: 'ph-square-04.webp', alt: 'Glassware' },
+        { src: 'ph-square-05.webp', alt: 'Woven basket' },
+        { src: 'ph-square-06.webp', alt: 'Brass utensils' },
       ],
   }},
 

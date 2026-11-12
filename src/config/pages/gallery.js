@@ -23,11 +23,9 @@
 //   lightbox false — turn the overlay off
 // ============================================================
 
-const shot = (seed, w, h, alt, category, caption) => ({
-  src:  `https://picsum.photos/seed/${seed}/${Math.round(w / 2)}/${Math.round(h / 2)}`,
-  full: `https://picsum.photos/seed/${seed}/${w}/${h}`,
-  alt, category, caption,
-})
+// Bundled placeholders in mixed shapes (portrait, photo, square, card), so
+// the masonry layout has something to do. Swap in your own files by name.
+const shot = (image, alt, category, caption) => ({ src: image, alt, category, caption })
 
 export const page = {
   slug: 'gallery', name: 'Gallery', view: 'rows',
@@ -43,18 +41,18 @@ export const page = {
           filter:  true,
           surface: false,
           images: [
-            shot('dv-mug',    1200, 1500, 'Stack of glazed stoneware mugs', 'Ceramics', 'Speckled glaze, fired in small batches.'),
-            shot('dv-bench',  1600, 1067, 'Workbench with hand tools',      'Workshop', 'Where most of it starts.'),
-            shot('dv-linen',  1200, 1200, 'Folded linen napkins',           'Textiles', 'Stonewashed linen in four colors.'),
-            shot('dv-bowl',   1600, 1200, 'Serving bowl on a table',        'Ceramics', 'A wide serving bowl, glazed inside only.'),
-            shot('dv-board',  1200, 1600, 'Walnut cutting board',           'Wood',     'End-grain walnut, oiled and ready.'),
-            shot('dv-kiln',   1600, 1067, 'Kiln shelves loaded with pots',  'Workshop', 'Loading the kiln for a glaze firing.'),
-            shot('dv-throw',  1200, 1500, 'Hands throwing a pot',           'Workshop'),
-            shot('dv-spoon',  1600, 1200, 'Carved wooden spoons',           'Wood',     'Cherry spoons, carved by hand.'),
-            shot('dv-weave',  1200, 1200, 'Woven table runner',             'Textiles'),
-            shot('dv-vase',   1200, 1600, 'Tall vase with dried flowers',   'Ceramics', 'Tall bud vase in ash glaze.'),
-            shot('dv-shelf',  1600, 1067, 'Shelves of finished pieces',     'Workshop', 'Finished and waiting to ship.'),
-            shot('dv-tray',   1600, 1200, 'Oak serving tray',               'Wood'),
+            shot('ph-portrait-01.webp', 'Stack of glazed stoneware mugs', 'Ceramics', 'Speckled glaze, fired in small batches.'),
+            shot('ph-photo-01.webp', 'Workbench with hand tools',      'Workshop', 'Where most of it starts.'),
+            shot('ph-square-01.webp', 'Folded linen napkins',           'Textiles', 'Stonewashed linen in four colors.'),
+            shot('ph-card-01.webp', 'Serving bowl on a table',        'Ceramics', 'A wide serving bowl, glazed inside only.'),
+            shot('ph-portrait-02.webp', 'Walnut cutting board',           'Wood',     'End-grain walnut, oiled and ready.'),
+            shot('ph-photo-02.webp', 'Kiln shelves loaded with pots',  'Workshop', 'Loading the kiln for a glaze firing.'),
+            shot('ph-portrait-03.webp', 'Hands throwing a pot',           'Workshop'),
+            shot('ph-card-02.webp', 'Carved wooden spoons',           'Wood',     'Cherry spoons, carved by hand.'),
+            shot('ph-square-02.webp', 'Woven table runner',             'Textiles'),
+            shot('ph-portrait-04.webp', 'Tall vase with dried flowers',   'Ceramics', 'Tall bud vase in ash glaze.'),
+            shot('ph-photo-03.webp', 'Shelves of finished pieces',     'Workshop', 'Finished and waiting to ship.'),
+            shot('ph-card-03.webp', 'Oak serving tray',               'Wood'),
           ],
       }},
     ]},
