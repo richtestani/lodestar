@@ -8,6 +8,10 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Features rows: `layout: 'statement'`.** A text-only, two-column row:
+  label and a large title (optional `accent` line in the accent color) on the
+  left; `lead`, `text` (one or more paragraphs) and a CTA on the right.
+  `accent` also works on cards rows.
 
 - **Bundled placeholder images** (`src/assets/placeholders/`). 30 abstract
   WebP placeholders (16:9, 3:2, 4:3, 1:1, 4:5 and neutral avatars, about

@@ -261,6 +261,9 @@ prop in the section's `props`:
   with `numbered: true` for 01 / 02 / … labels and `columns` to override the
   per-row count. Image rows alternate sides, counting only image rows;
   `textSide: 'left' | 'right'` pins one, and the pattern continues from it.
+  `layout: 'statement'` is a text-only two-column row: label + large title
+  (with an optional `accent` second line in the accent color) on the left,
+  `lead`, `text` (string or array of paragraphs) and `cta` on the right.
   `tone: 'dark'` on a row gives it a full-bleed dark band; on
   the module, it puts the whole section on the dark panel. Dark text uses the
   optional `--on-dark` token (near-white by default).

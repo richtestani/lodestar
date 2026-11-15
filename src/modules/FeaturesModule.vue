@@ -28,7 +28,8 @@
           class="feat-row"
           :class="{
             'feat-row--cards': item.layout === 'cards',
-            'no-media': item.layout !== 'cards' && !item.image,
+            'feat-row--statement': item.layout === 'statement',
+            'no-media': !item.layout && !item.image,
             'text-right': textSides[i] === 'right',
             'tone-dark is-dark': item.tone === 'dark' && !sectionDark,
           }"
@@ -38,7 +39,7 @@
             <header class="feat-cards-head">
               <div>
                 <p v-if="item.label" class="eyebrow">{{ item.label }}</p>
-                <h3 class="feat-cards-title">{{ item.title }}</h3>
+                <h3 class="feat-cards-title">{{ item.title }}<span v-if="item.accent" class="feat-accent">{{ item.accent }}</span></h3>
               </div>
               <p v-if="item.text" class="feat-row-text">{{ item.text }}</p>
             </header>
@@ -58,6 +59,19 @@
 
             <div v-if="item.cta" class="feat-cards-foot">
               <RouterLink :to="item.cta.to" class="btn btn--link">{{ item.cta.label }} →</RouterLink>
+            </div>
+          </template>
+
+          <!-- layout: 'statement' — text only: heading left, lead + body right -->
+          <template v-else-if="item.layout === 'statement'">
+            <div class="feat-statement-head">
+              <p v-if="item.label" class="eyebrow">{{ item.label }}</p>
+              <h3 class="feat-statement-title">{{ item.title }}<span v-if="item.accent" class="feat-accent">{{ item.accent }}</span></h3>
+            </div>
+            <div class="feat-statement-body">
+              <p v-if="item.lead" class="feat-statement-lead">{{ item.lead }}</p>
+              <p v-for="(para, pi) in paragraphs(item.text)" :key="pi" class="feat-statement-text">{{ para }}</p>
+              <RouterLink v-if="item.cta" :to="item.cta.to" class="btn btn--link feat-row-cta">{{ item.cta.label }} →</RouterLink>
             </div>
           </template>
 
@@ -121,6 +135,10 @@ const props = defineProps({
   //     ({ label, icon, title, text, points[] }), and an optional cta.
   //     `numbered: true` prefixes card labels with 01 /, 02 /, …;
   //     `columns` overrides the card count per row (default: up to 4)
+  //   • layout: 'statement': text only, two columns. Left: label and a large
+  //     title, with optional `accent` (a second line in the accent color).
+  //     Right: `lead` (larger), `text` (a string or an array of paragraphs,
+  //     muted) and cta. `accent` also works on cards rows.
   //   Any row can take `tone: 'dark'` for a full-bleed dark band. Image rows
   //   take `textSide: 'left' | 'right'` to pin the copy to one side.
   variant: { type: String, default: 'grid' },
@@ -141,7 +159,7 @@ const onSurface = computed(() => props.surface ?? props.variant !== 'rows')
 const textSides = computed(() => {
   let next = 'right'
   return props.items.map((item) => {
-    if (item.layout === 'cards' || !item.image) return null
+    if (item.layout || !item.image) return null
     const side = item.textSide === 'left' || item.textSide === 'right' ? item.textSide : next
     next = side === 'right' ? 'left' : 'right'
     return side
@@ -151,6 +169,8 @@ const sectionDark = computed(() => props.tone === 'dark')
 
 // An icon is an image if it looks like a path or URL; otherwise it's a glyph.
 const isImage = (s) => typeof s === 'string' && /\.(svg|png|jpe?g|webp|gif)$|^https?:|\//i.test(s)
+
+const paragraphs = (text) => (Array.isArray(text) ? text : text ? [text] : [])
 
 function cardLabel(item, pt, i) {
   const label = typeof pt === 'object' ? pt.label : ''
@@ -231,6 +251,21 @@ function cardLabel(item, pt, i) {
 @media (max-width: 1000px) { .feat-cards { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 800px)  { .feat-cards-head { grid-template-columns: 1fr; } }
 @media (max-width: 600px)  { .feat-cards { grid-template-columns: 1fr; } }
+
+/* ── rows › layout: 'statement' ── */
+.feat-row--statement {
+  grid-template-columns: 1fr 1fr; gap: 2.5rem clamp(3rem, 8vw, 8rem); align-items: start;
+}
+.feat-statement-title {
+  margin-top: 0.9rem; white-space: pre-line;
+  font-size: clamp(2.4rem, 5.5vw, 4.75rem); line-height: 1.05; letter-spacing: -0.02em;
+}
+.feat-accent { display: block; color: var(--label-color, var(--primary)); }
+.feat-statement-lead { font-size: clamp(1.15rem, 1.9vw, 1.5rem); line-height: 1.55; color: var(--text); }
+.feat-statement-text { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; }
+.feat-statement-body > * + * { margin-top: 1.5rem; }
+.feat-statement-body > .feat-row-cta { margin-top: 2.25rem; }
+@media (max-width: 800px) { .feat-row--statement { grid-template-columns: 1fr; } }
 
 /* ── tone: 'dark' (section or single row) ──
    surface-2 is dark in every theme, so text comes from --on-dark (optional
