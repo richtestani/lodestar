@@ -33,6 +33,10 @@ const navComponent = computed(() => (site.nav.style === 'mega' && ProMegaNav) ? 
    base.css adds the structural styles that read those tokens. */
 @import './themes/overrides.css';
 @import './themes/base.css';
+@layer theme, base, modules;
+@import './themes/overrides.css' layer(theme);
+@import './themes/base.css' layer(base);
+@import './themes/custom.css';   /* unlayered: always wins */
 
 .lodestar-dev-notice {
   position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
