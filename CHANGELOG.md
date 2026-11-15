@@ -8,7 +8,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
-<<<<<<< HEAD
+
 - **Bundled placeholder images** (`src/assets/placeholders/`). 30 abstract
   WebP placeholders (16:9, 3:2, 4:3, 1:1, 4:5 and neutral avatars, about
   220 KB total) replace every picsum.photos URL in the demo config, `setup.mjs`
@@ -18,7 +18,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   the set tinted to a brand color.
 - **Placeholder report at build time.** The prerender ends with a list of
   every page still showing a placeholder image.
-=======
+
 - **Features: more row content, cards rows and a dark tone.** Rows take
   `stats`, `quote`, and `points` as `{ title, text }` as well as strings.
   `layout: 'cards'` turns a row into a split heading over a grid of cards
@@ -72,7 +72,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 - **Build checks for media**: missing `title`, unknown type or layout, a file
   extension that doesn't match its type, non-`.vtt` captions or a missing
   `lang`, and local filenames that don't exist all fail the build.
->>>>>>> Features: more row content, cards rows and a dark tone
+Features: more row content, cards rows and a dark tone
 
 ### Changed
 - **CSP** in `deploy/nginx.conf.txt` adds `media-src 'self'` and `'self'` to
