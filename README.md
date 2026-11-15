@@ -252,6 +252,16 @@ prop in the section's `props`:
 - **features** — `grid` (default) · `rows` (one feature per row, image and
   copy alternating sides; items can also carry `label`, `points: []` and `cta`).
   `surface: true|false` overrides the tinted band (on for grid, off for rows).
+  Grid cards also take `label` and `points` (bullets pinned to the card's
+  bottom); an `icon` can be a glyph or an image path. In `rows`, `points` can
+  be strings or `{ title, text }`, and a row can add `stats: [{ value, label }]`
+  and `quote: { text, cite }`. A row with `layout: 'cards'` is full width: a
+  split heading (label + title left, `text` right; `\n` in the title breaks
+  the line) and its `points` as cards `{ label, icon, title, text, points }`,
+  with `numbered: true` for 01 / 02 / … labels and `columns` to override the
+  per-row count. `tone: 'dark'` on a row gives it a full-bleed dark band; on
+  the module, it puts the whole section on the dark panel. Dark text uses the
+  optional `--on-dark` token (near-white by default).
 - **gallery** — `grid` (default) · `masonry` · `carousel` · `mosaic`
   Click any image to open it in a full-screen **lightbox** (← / → or swipe to
   move, Esc or backdrop to close; `lightbox: false` turns it off). Images take
