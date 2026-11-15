@@ -259,7 +259,9 @@ prop in the section's `props`:
   split heading (label + title left, `text` right; `\n` in the title breaks
   the line) and its `points` as cards `{ label, icon, title, text, points }`,
   with `numbered: true` for 01 / 02 / … labels and `columns` to override the
-  per-row count. `tone: 'dark'` on a row gives it a full-bleed dark band; on
+  per-row count. Image rows alternate sides, counting only image rows;
+  `textSide: 'left' | 'right'` pins one, and the pattern continues from it.
+  `tone: 'dark'` on a row gives it a full-bleed dark band; on
   the module, it puts the whole section on the dark panel. Dark text uses the
   optional `--on-dark` token (near-white by default).
 - **gallery** — `grid` (default) · `masonry` · `carousel` · `mosaic`

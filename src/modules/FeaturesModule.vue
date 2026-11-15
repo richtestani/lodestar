@@ -29,6 +29,7 @@
           :class="{
             'feat-row--cards': item.layout === 'cards',
             'no-media': item.layout !== 'cards' && !item.image,
+            'text-right': textSides[i] === 'right',
             'tone-dark is-dark': item.tone === 'dark' && !sectionDark,
           }"
         >
@@ -120,7 +121,8 @@ const props = defineProps({
   //     ({ label, icon, title, text, points[] }), and an optional cta.
   //     `numbered: true` prefixes card labels with 01 /, 02 /, …;
   //     `columns` overrides the card count per row (default: up to 4)
-  //   Any row can take `tone: 'dark'` for a full-bleed dark band.
+  //   Any row can take `tone: 'dark'` for a full-bleed dark band. Image rows
+  //   take `textSide: 'left' | 'right'` to pin the copy to one side.
   variant: { type: String, default: 'grid' },
   eyebrow: String, title: { type: String, default: '' }, intro: String,
   columns: { type: Number, default: 3 },
@@ -131,6 +133,20 @@ const props = defineProps({
   tone: { type: String, default: 'light' },
 })
 const onSurface = computed(() => props.surface ?? props.variant !== 'rows')
+
+// Which side the copy sits on in each image row. `textSide: 'left' | 'right'`
+// on an item pins it; otherwise image rows alternate (text right, then left,
+// …), counting only image rows, so cards or text-only rows mixed in don't
+// break the pattern. A pinned row resets the pattern from its side.
+const textSides = computed(() => {
+  let next = 'right'
+  return props.items.map((item) => {
+    if (item.layout === 'cards' || !item.image) return null
+    const side = item.textSide === 'left' || item.textSide === 'right' ? item.textSide : next
+    next = side === 'right' ? 'left' : 'right'
+    return side
+  })
+})
 const sectionDark = computed(() => props.tone === 'dark')
 
 // An icon is an image if it looks like a path or URL; otherwise it's a glyph.
@@ -165,7 +181,7 @@ function cardLabel(item, pt, i) {
 /* ── rows ── */
 .feat-rows { display: flex; flex-direction: column; gap: clamp(4rem, 9vw, 7rem); }
 .feat-row { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center; }
-.feat-row:nth-child(even) .feat-row-media { order: 2; }
+.feat-row:not(.text-right) .feat-row-media { order: 2; }
 .feat-row.no-media { grid-template-columns: 1fr; max-width: 680px; }
 .feat-row-media img {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
@@ -193,7 +209,7 @@ function cardLabel(item, pt, i) {
 
 @media (max-width: 800px) {
   .feat-row { grid-template-columns: 1fr; }
-  .feat-row:nth-child(even) .feat-row-media { order: 0; }
+  .feat-row:not(.text-right) .feat-row-media { order: 0; }
 }
 
 /* ── rows › layout: 'cards' ── */
