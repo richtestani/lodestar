@@ -9,3 +9,4 @@ public
 .vscode/*
 !.vscode/extensions.json
 .idea
+*.patch
