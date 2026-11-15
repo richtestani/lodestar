@@ -3,9 +3,9 @@
     <!-- Wrapped in lodestar-pro-modules' SectionMotion when it's installed
          and this is a top-level page section (not a RowLayout column). -->
     <SectionMotion v-if="SectionMotion && !nested" :module="section.module" :override="section.motion">
-      <component :is="moduleFor(section.module)" v-bind="propsFor(section)" />
+      <component :is="moduleFor(section.module)" :id="section.id" v-bind="propsFor(section)" />
     </SectionMotion>
-    <component v-else :is="moduleFor(section.module)" v-bind="propsFor(section)" />
+    <component v-else :is="moduleFor(section.module)" :id="section.id" v-bind="propsFor(section)" />
   </template>
 </template>
 
@@ -43,6 +43,10 @@ function moduleFor(name) {
   }
   return c
 }
+
+// `id` on a section entry (a sibling of `module`, not inside `props`) lands
+// on the module's root element via attribute fallthrough, so in-page links
+// like `/#services` can target it.
 
 // Precedence, lowest to highest: a module's sitewide default
 // (config/modules/<name>.js, optional) < page-supplied context

@@ -22,7 +22,9 @@
 
     <ul class="nav-links" :class="{ open: menuOpen }">
       <li v-for="link in links" :key="link.to">
-        <RouterLink :to="link.to" class="nav-link" @click="close">
+        <!-- Vue Router ignores the #hash when marking links active, so
+             in-page links (/#services) would all light up on the home page. -->
+        <RouterLink :to="link.to" class="nav-link" :exact-active-class="isHashLink(link.to) ? '' : undefined" @click="close">
           <span class="nav-link-content" :class="{ 'icon-right': iconPosition === 'right' }">
             <img v-if="link.icon" :src="asset(link.icon)" class="nav-link-icon" alt="" />
             <span>{{ link.label }}</span>
@@ -39,6 +41,7 @@
 </template>
 
 <script setup>
+const isHashLink = (to) => typeof to === 'string' && to.includes('#')
 // classic | centered | minimal. For a nested/dropdown mega nav, see
 // lodestar-pro-modules' MegaNav.vue (set nav.style: 'mega') — this
 // component only ever renders flat top-level links.

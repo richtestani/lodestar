@@ -25,6 +25,7 @@
       <div v-else class="feat-rows">
         <article
           v-for="(item, i) in items" :key="i"
+          :id="item.id"
           class="feat-row"
           :class="{
             'feat-row--cards': item.layout === 'cards',
@@ -140,7 +141,8 @@ const props = defineProps({
   //     Right: `lead` (larger), `text` (a string or an array of paragraphs,
   //     muted) and cta. `accent` also works on cards rows.
   //   Any row can take `tone: 'dark'` for a full-bleed dark band. Image rows
-  //   take `textSide: 'left' | 'right'` to pin the copy to one side.
+  //   take `textSide: 'left' | 'right'` to pin the copy to one side. Any row
+  //   can take `id` so in-page links (`/#approach`) can scroll to it.
   variant: { type: String, default: 'grid' },
   eyebrow: String, title: { type: String, default: '' }, intro: String,
   columns: { type: Number, default: 3 },

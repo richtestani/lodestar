@@ -95,6 +95,21 @@ export const homeSections = [
 
 Reorder, remove, or duplicate entries freely. Unknown module names warn in dev.
 
+**In-page links.** Give a section an `id` (next to `module`, not inside
+`props`) and link to it from the nav or a CTA with `/#that-id`:
+
+```js
+// config/home.js
+{ module: 'features', id: 'services', props: { … } }
+// config/site.js nav
+{ label: 'Services', to: '/#services' }
+```
+
+The page scrolls there smoothly (instantly with reduced motion), landing
+below the fixed header, including from another page. Features rows and
+`rows`-page rows take `id` too. In-page links aren't highlighted as the
+active nav item, since they'd all match the home page.
+
 ## Pages
 
 Each entry in `pages` picks a `view`:

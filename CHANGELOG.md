@@ -8,6 +8,12 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **In-page links.** Sections take an `id` (next to `module`), as do features
+  rows and `rows`-page rows, so nav links and CTAs like `/#services` can point
+  at them. The router scrolls smoothly (instantly with reduced motion), offsets
+  for the fixed header, waits for the target when arriving from another page,
+  and restores the scroll position on back/forward. In-page nav links aren't
+  marked active.
 - **Features rows: `layout: 'statement'`.** A text-only, two-column row:
   label and a large title (optional `accent` line in the accent color) on the
   left; `lead`, `text` (one or more paragraphs) and a CTA on the right.

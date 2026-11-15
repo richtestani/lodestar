@@ -40,6 +40,7 @@
     <div
       v-for="(row, i) in rows"
       :key="i"
+      :id="row.id"
       class="row-layout__row"
       :class="[row.className, { 'is-flush': row.flush }]"
       :style="{ gridTemplateColumns: presetFor(row).ratio.join(' ') }"

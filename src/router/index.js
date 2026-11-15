@@ -80,10 +80,36 @@ if (docsRegistry.length) {
 // The build also saves it as public/404.html; see scripts/prerender.mjs.
 routes.push({ path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView })
 
+// In-page links (`/#services`) scroll to the element with that id, smoothly
+// unless the visitor prefers reduced motion, landing below the fixed header.
+// Back/forward restores the previous position; anything else starts at top.
+// Coming from another page, the target may not be rendered yet, so this
+// waits up to ~1.5s for it before giving up and scrolling to the top.
+function scrollBehavior(to, from, savedPosition) {
+  if (savedPosition) return savedPosition
+  if (!to.hash) return { top: 0 }
+
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const behavior = reduce ? 'auto' : 'smooth'
+  const offset = () => (document.getElementById('main-nav')?.offsetHeight || 0) + 16
+
+  return new Promise((resolve) => {
+    const started = performance.now()
+    const look = () => {
+      let el = null
+      try { el = document.querySelector(to.hash) } catch { /* not a valid selector */ }
+      if (el) return resolve({ el: to.hash, top: offset(), behavior })
+      if (performance.now() - started > 1500) return resolve({ top: 0 })
+      requestAnimationFrame(look)
+    }
+    look()
+  })
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  scrollBehavior() { return { top: 0 } },
+  scrollBehavior,
 })
 
 // Dev-only hint: a nav link or page that lands on Not Found is usually a

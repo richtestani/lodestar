@@ -60,9 +60,11 @@ h1, h2, h3 { font-family: var(--font-display); line-height: var(--display-leadin
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* keeps anchor-jumped headings from landing behind the fixed header */
+/* keeps anchor-jumped headings and id'd sections from landing behind the
+   fixed header (the router adds the same offset for in-app links) */
 .prose h2,
-.prose h3 {
+.prose h3,
+:where(section, article, .row-layout__row)[id] {
   scroll-margin-top: calc(var(--header-height) + 16px);
 }
 
