@@ -12,37 +12,16 @@
 </template>
 
 <script setup>
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { useScrollSpy } from '@/composables/useScrollSpy.js'
 
 const props = defineProps({
   // [{ id: 'browser-support', text: 'Browser Support', depth: 'H2' }, ...]
   headings: { type: Array, default: () => [] },
 })
 
-const activeId = ref(null)
-let observer = null
-
-function setupObserver() {
-  observer?.disconnect()
-  if (!props.headings.length) return
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      const visible = entries.find((e) => e.isIntersecting)
-      if (visible) activeId.value = visible.target.id
-    },
-    { rootMargin: '0px 0px -70% 0px' }
-  )
-
-  props.headings.forEach((h) => {
-    const el = document.getElementById(h.id)
-    if (el) observer.observe(el)
-  })
-}
-
-// re-observe whenever the heading list changes (e.g. on route/page change)
-watch(() => props.headings, setupObserver, { immediate: true })
-onBeforeUnmount(() => observer?.disconnect())
+// keepLast: headings are short, so the last one passed stays highlighted
+// until the next one arrives, instead of flickering off between them.
+const { activeId } = useScrollSpy(() => props.headings.map((h) => h.id), { keepLast: true })
 </script>
 
 <style scoped>

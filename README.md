@@ -108,7 +108,11 @@ Reorder, remove, or duplicate entries freely. Unknown module names warn in dev.
 The page scrolls there smoothly (instantly with reduced motion), landing
 below the fixed header, including from another page. Features rows and
 `rows`-page rows take `id` too. In-page links aren't highlighted as the
-active nav item, since they'd all match the home page.
+active nav item by route, since they'd all match the home page. Instead, the
+nav scroll-spies them: the link for the section in view gets `.is-active`
+(styled like the active page link) and `aria-current="location"`, and the
+home link steps aside while one is lit. At the very bottom of the page the
+last linked section wins, so a short final section (Contact) still lights up.
 
 ## Pages
 

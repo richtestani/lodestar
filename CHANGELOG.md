@@ -8,6 +8,11 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Scroll-spy in the main nav.** In-page nav links (`/#services`) highlight
+  as their section scrolls into view, with `aria-current="location"`; the
+  page's own link steps aside while one is lit, and the last section wins at
+  the bottom of the page. The observer logic moved into
+  `composables/useScrollSpy.js`, now shared with the docs `ScrollSpyNav`.
 - **In-page links.** Sections take an `id` (next to `module`), as do features
   rows and `rows`-page rows, so nav links and CTAs like `/#services` can point
   at them. The router scrolls smoothly (instantly with reduced motion), offsets

@@ -24,7 +24,13 @@
       <li v-for="link in links" :key="link.to">
         <!-- Vue Router ignores the #hash when marking links active, so
              in-page links (/#services) would all light up on the home page. -->
-        <RouterLink :to="link.to" class="nav-link" :exact-active-class="isHashLink(link.to) ? '' : undefined" @click="close">
+        <RouterLink
+          :to="link.to" class="nav-link"
+          :class="{ 'is-active': spyIdFor(link.to) && spyIdFor(link.to) === activeId }"
+          :aria-current="spyIdFor(link.to) && spyIdFor(link.to) === activeId ? 'location' : undefined"
+          :exact-active-class="isHashLink(link.to) || activeId ? '' : undefined"
+          @click="close"
+        >
           <span class="nav-link-content" :class="{ 'icon-right': iconPosition === 'right' }">
             <img v-if="link.icon" :src="asset(link.icon)" class="nav-link-icon" alt="" />
             <span>{{ link.label }}</span>
@@ -46,7 +52,9 @@ const isHashLink = (to) => typeof to === 'string' && to.includes('#')
 // lodestar-pro-modules' MegaNav.vue (set nav.style: 'mega') — this
 // component only ever renders flat top-level links.
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { site } from '@/site.config.js'
+import { useScrollSpy } from '@/composables/useScrollSpy.js'
 import { asset } from '@/composables/useAssets.js'
 
 const brand     = site.brand
@@ -78,6 +86,20 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 const links = computed(() =>
   site.nav.links ||
   site.pages.filter(p => p.showInNav !== false).map(p => ({ label: p.name, to: '/' + p.slug }))
+)
+
+// In-page links (`/#services`) on the current page are scroll-spied: the
+// link for the section in view gets .is-active. While one is active, the
+// page's own link (e.g. Home) stops showing as active, so only one lights up.
+const route = useRoute()
+function spyIdFor(to) {
+  if (!isHashLink(to)) return null
+  const [path, hash] = to.split('#')
+  return hash && (path || route.path) === route.path ? hash : null
+}
+const { activeId } = useScrollSpy(
+  () => links.value.map(l => spyIdFor(l.to)).filter(Boolean),
+  { topOffset: () => document.getElementById('main-nav')?.offsetHeight || 0, keepLast: false, bottomLast: true },
 )
 
 // hoverBg / hoverText / bgImage are all optional — CSS falls back to the
@@ -148,7 +170,7 @@ onUnmounted(() => { document.body.style.overflow = '' })
   letter-spacing: var(--nav-link-tracking, 0.14em); text-transform: var(--nav-link-case, uppercase); color: var(--text);
   opacity: 0.78; transition: opacity 0.2s, color 0.2s, background 0.2s; white-space: nowrap;
 }
-.nav-link:hover, .nav-link.router-link-exact-active {
+.nav-link:hover, .nav-link.router-link-exact-active, .nav-link.is-active {
   opacity: 1; color: var(--nav-hover-text, var(--primary)); background: var(--nav-hover-bg, transparent);
 }
 
