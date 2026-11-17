@@ -17,7 +17,7 @@
     <div class="container" :class="{ 'mmod-narrow': narrow }">
       <div v-if="eyebrow || title || intro" class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 v-if="title" class="h-title">{{ title }}</h2>
+        <RichText as="h2" v-if="title" class="h-title" :text="title" />
         <p v-if="intro">{{ intro }}</p>
       </div>
       <div class="mmod-grid" :style="{ '--mmod-cols': cols }">
@@ -28,6 +28,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 import { computed } from 'vue'
 import MediaEmbed from '@/components/media/MediaEmbed.vue'
 

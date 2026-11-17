@@ -28,20 +28,22 @@
     <div class="container hero-inner">
       <div class="hero-copy">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h1 class="h-display hero-title">{{ title }}</h1>
-        <p v-if="subtitle" class="lead hero-sub">{{ subtitle }}</p>
+        <RichText as="h1" class="h-display hero-title" :text="title" />
+        <RichText as="p" v-if="subtitle" class="lead hero-sub" :text="subtitle" />
         <div class="hero-actions">
           <RouterLink v-if="primaryCta" :to="primaryCta.to" class="btn">{{ primaryCta.label }}</RouterLink>
           <RouterLink v-if="secondaryCta" :to="secondaryCta.to" class="btn btn--ghost">{{ secondaryCta.label }}</RouterLink>
         </div>
         <p v-if="note" class="hero-note">{{ note }}</p>
       </div>
-      <div v-if="usesMedia && bg" class="hero-media"><img :src="bg" :alt="title" /></div>
+      <div v-if="usesMedia && bg" class="hero-media"><img :src="bg" :alt="plainText(title)" /></div>
     </div>
   </section>
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
+import { plainText } from '../components/prose/richText.js'
 import { computed } from 'vue'
 import { asset } from '@/composables/useAssets.js'
 import { useBackgroundVideo } from '@/components/media/useBackgroundVideo.js'

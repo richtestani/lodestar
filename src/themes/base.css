@@ -89,3 +89,25 @@ h1, h2, h3 { font-family: var(--font-display); line-height: var(--display-leadin
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.12s !important; }
 }
+
+/* ---- Rich text (markdown in config strings — see components/prose/richText.js) ----
+   ==highlight== is the second color in a two-tone title. Themes or
+   overrides.css can set --highlight-color; it falls back to the primary. */
+.rich mark, .prose-block mark { background: none; color: var(--highlight-color, var(--primary)); }
+.rich strong, .prose-block strong { font-weight: 700; }
+p.rich mark, .prose-block mark { font-weight: 600; } /* so a body highlight doesn't read as a link */
+.rich code, .prose-block code {
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.9em;
+  background: color-mix(in srgb, var(--text) 8%, transparent); padding: 0.1em 0.35em; border-radius: 4px;
+}
+/* links inside body text; links in headings keep the heading's color */
+p.rich a, .prose-block a {
+  color: var(--primary); text-decoration: underline; text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, var(--primary) 45%, transparent);
+}
+p.rich a:hover, .prose-block a:hover { color: var(--primary-2, var(--primary)); text-decoration-color: currentColor; }
+.prose-block ul, .prose-block ol { padding-left: 1.4em; }
+.prose-block li + li { margin-top: 0.35em; }
+.prose-block blockquote {
+  border-left: 2px solid var(--primary); padding-left: 1em; font-style: italic; opacity: 0.9;
+}

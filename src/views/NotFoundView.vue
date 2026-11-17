@@ -14,7 +14,7 @@
         <p class="nf-code" aria-hidden="true">404</p>
         <p v-if="content.eyebrow" class="eyebrow">{{ content.eyebrow }}</p>
         <hr class="rule is-center" />
-        <h1 class="h-title nf-title">{{ content.title }}</h1>
+        <RichText as="h1" class="h-title nf-title" :text="content.title" />
         <p v-if="content.text" class="nf-text">{{ content.text }}</p>
         <RouterLink v-if="content.cta" :to="content.cta.to" class="btn">{{ content.cta.label }}</RouterLink>
 
@@ -32,6 +32,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 import { computed } from 'vue'
 import { site } from '@/site.config.js'
 

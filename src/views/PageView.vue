@@ -5,7 +5,7 @@
         <PageImage v-for="(img, i) in topImages" :key="'top' + i" :image="img" :eager="i === 0" />
         <p v-if="content.eyebrow" class="eyebrow">{{ content.eyebrow }}</p>
         <hr class="rule" />
-        <h1 class="h-title page-title">{{ content.title }}</h1>
+        <RichText as="h1" class="h-title page-title" :text="content.title" />
         <ProseBody class="page-body" :body="content.body" :images="content.images" :media="content.media" para-class="page-para" />
         <RouterLink v-if="content.cta" :to="content.cta.to" class="btn page-cta">{{ content.cta.label }}</RouterLink>
       </div>
@@ -14,6 +14,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 import { computed } from 'vue'
 import ProseBody from '../components/prose/ProseBody.vue'
 import PageImage from '../components/prose/PageImage.vue'

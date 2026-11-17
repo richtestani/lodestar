@@ -4,7 +4,7 @@
       <div class="container contact-inner">
         <div class="section-head is-center">
           <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-          <h1 class="h-title">{{ title }}</h1>
+          <RichText as="h1" class="h-title" :text="title" />
           <p v-if="intro">{{ intro }}</p>
         </div>
         <ContactForm v-bind="form" />
@@ -14,6 +14,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 // The 'contact' view — a general form page. With no extra config it's the
 // original "Contact us" page. Any page with view: 'contact' can set its own
 // copy and form, so a booking or quote page is just another config file:

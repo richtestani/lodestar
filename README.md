@@ -196,6 +196,43 @@ crawlable URL (a privacy policy, terms of service), set `showInNav: false`
 on it. Doesn't apply if `nav.links` is set by hand in `config/nav.js` — that
 list is already exactly what you wrote.
 
+## Formatting text
+
+Titles, subtitles, CTA text and `body` paragraphs accept a little markdown:
+
+| Write | Get |
+|---|---|
+| `**bold**` | **bold** |
+| `*italic*` | *italic* |
+| `` `code` `` | `code` |
+| `[About us](/about)` | a link (internal links route without a page reload; `https://` links open in a new tab) |
+| `==highlight==` | the phrase in the accent color |
+
+`==highlight==` is how you get a two-tone title:
+
+```js
+title: 'Experience at the intersection of ==business and technology.==',
+```
+
+The color comes from `--highlight-color`, falling back to `--primary`; set it in
+`overrides.css` to change it site-wide. In body text a highlight is also semibold
+so it doesn't read as a link.
+
+A `body` paragraph that starts with `- `, `1. ` or `> ` renders as a list or a
+quote instead of a `<p>`, with items separated by `\n`:
+
+```js
+body: [
+  'He has led initiatives across **AI**, **cybersecurity** and ERP modernization.',
+  '- Enterprise technology strategy\n- Board and C-suite alignment\n- Global modernization',
+],
+```
+
+A single `\n` inside an ordinary paragraph is a line break. Raw HTML is not
+allowed. It is shown as text. The renderer lives in
+`components/prose/richText.js`. Use `<RichText as="h2" :text="title" />` in
+your own modules to get the same behavior.
+
 ## Docs (optional)
 
 A documentation section for manuals, help centers or policies. Each Markdown

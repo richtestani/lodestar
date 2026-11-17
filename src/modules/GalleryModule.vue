@@ -3,7 +3,7 @@
     <div class="container">
       <div v-if="eyebrow || title || intro" class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 v-if="title" class="h-title">{{ title }}</h2>
+        <RichText as="h2" v-if="title" class="h-title" :text="title" />
         <p v-if="intro">{{ intro }}</p>
       </div>
 
@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { asset, media } from '@/composables/useAssets.js'
 import Lightbox from '@/components/ui/Lightbox.vue'

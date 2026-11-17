@@ -3,8 +3,8 @@
     <div class="container contact-wrap">
       <div class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 class="h-title">{{ title }}</h2>
-        <p v-if="text">{{ text }}</p>
+        <RichText as="h2" class="h-title" :text="title" />
+        <RichText as="p" v-if="text" :text="text" />
       </div>
       <ContactForm v-bind="form" />
     </div>
@@ -12,6 +12,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 // `form` takes the same object as a contact page's `form` key —
 // { fields, subject, endpoint, submitLabel, success } — so a booking or
 // quote form can sit as a section on any page. Omit it for the default

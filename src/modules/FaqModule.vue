@@ -3,7 +3,7 @@
     <div class="container faq-wrap">
       <div class="section-head">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 class="h-title">{{ title }}</h2>
+        <RichText as="h2" class="h-title" :text="title" />
       </div>
       <ul class="faq-list">
         <li v-for="(item, i) in items" :key="i" class="faq-item" :class="{ open: openIndex === i }">
@@ -19,6 +19,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 import { ref } from 'vue'
 defineProps({ eyebrow: String, title: { type: String, default: '' }, items: { type: Array, default: () => [] } })
 const openIndex = ref(0)

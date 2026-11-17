@@ -4,7 +4,7 @@
       <div class="map-grid">
         <div class="map-info">
           <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-          <h2 class="h-title">{{ title }}</h2>
+          <RichText as="h2" class="h-title" :text="title" />
           <p v-if="address" class="map-addr">{{ address }}</p>
           <ul v-if="hours.length" class="map-hours">
             <li v-for="(h, i) in hours" :key="i"><span>{{ h.day }}</span><span>{{ h.time }}</span></li>
@@ -24,6 +24,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 import { computed } from 'vue'
 import { site } from '@/site.config.js'
 const props = defineProps({

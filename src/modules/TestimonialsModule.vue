@@ -3,7 +3,7 @@
     <div class="container">
       <div class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 class="h-title">{{ title }}</h2>
+        <RichText as="h2" class="h-title" :text="title" />
       </div>
       <div class="quote-grid">
         <figure v-for="(t, i) in items" :key="i" class="card quote-card">
@@ -19,6 +19,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 defineProps({ eyebrow: String, title: { type: String, default: '' }, items: { type: Array, default: () => [] } })
 </script>
 

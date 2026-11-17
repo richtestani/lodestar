@@ -3,7 +3,7 @@
     <div class="container">
       <div class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 class="h-title">{{ title }}</h2>
+        <RichText as="h2" class="h-title" :text="title" />
       </div>
       <div class="team-grid">
         <article v-for="(m, i) in members" :key="i" class="team-card">
@@ -18,6 +18,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 import { asset } from '@/composables/useAssets.js'
 defineProps({ eyebrow: String, title: { type: String, default: '' }, members: { type: Array, default: () => [] } })
 const src = asset

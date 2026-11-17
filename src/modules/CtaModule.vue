@@ -2,8 +2,8 @@
   <section class="cta-band">
     <div class="container cta-inner">
       <div>
-        <h2 class="h-title">{{ title }}</h2>
-        <p v-if="text" class="cta-text">{{ text }}</p>
+        <RichText as="h2" class="h-title" :text="title" />
+        <RichText as="p" v-if="text" class="cta-text" :text="text" />
       </div>
       <RouterLink v-if="cta" :to="cta.to" class="btn">{{ cta.label }}</RouterLink>
     </div>
@@ -11,6 +11,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 defineProps({ title: { type: String, default: '' }, text: String, cta: Object })
 </script>
 

@@ -3,7 +3,7 @@
     <div class="container menu-wrap">
       <div class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 class="h-title">{{ title }}</h2>
+        <RichText as="h2" class="h-title" :text="title" />
       </div>
       <div class="menu-groups">
         <div v-for="(group, gi) in groups" :key="gi" class="menu-group">
@@ -25,6 +25,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 defineProps({ eyebrow: String, title: { type: String, default: '' }, groups: { type: Array, default: () => [] } })
 </script>
 

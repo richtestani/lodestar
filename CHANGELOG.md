@@ -8,6 +8,13 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 ## [Unreleased]
 
 ### Added
+- **Formatted text in config.** Titles, subtitles, CTA/contact text and
+  `body` paragraphs take inline markdown: `**bold**`, `*italic*`, `` `code` ``,
+  `[links](/about)` and `==highlight==` (accent color, for two-tone titles via
+  `--highlight-color`). Body paragraphs starting with `- `, `1. ` or `> ` render
+  as lists/quotes. Internal links route client-side; external ones open in a new
+  tab. Raw HTML stays off. New `RichText` component and
+  `components/prose/richText.js`; `markdown-it` is now a direct dependency.
 - **Scroll-spy in the main nav.** In-page nav links (`/#services`) highlight
   as their section scrolls into view, with `aria-current="location"`; the
   page's own link steps aside while one is lit, and the last section wins at

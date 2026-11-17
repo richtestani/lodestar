@@ -3,7 +3,7 @@
     <div class="container">
       <div class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 class="h-title">{{ title }}</h2>
+        <RichText as="h2" class="h-title" :text="title" />
       </div>
       <div class="price-grid">
         <article v-for="(tier, i) in tiers" :key="i" class="card price-card" :class="{ featured: tier.featured }">
@@ -21,6 +21,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 defineProps({ eyebrow: String, title: { type: String, default: '' }, tiers: { type: Array, default: () => [] } })
 </script>
 

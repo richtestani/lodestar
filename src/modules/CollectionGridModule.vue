@@ -3,7 +3,7 @@
     <div class="container">
       <div class="section-head is-center">
         <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
-        <h2 class="h-title">{{ title }}</h2>
+        <RichText as="h2" class="h-title" :text="title" />
       </div>
       <div v-for="g in groups" :key="g.key ?? '_all'" class="cg-group">
         <h3 v-if="g.key" class="cg-group-heading">{{ g.key }}</h3>
@@ -30,6 +30,7 @@
 </template>
 
 <script setup>
+import RichText from '../components/prose/RichText.vue'
 // Generic collection listing — works for a shop, team, portfolio,
 // services, blog, whatever a project's collection holds. Only `name` is
 // required per item; `image`/`price`/`tagline` render if present,

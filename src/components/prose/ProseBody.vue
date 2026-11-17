@@ -4,15 +4,21 @@
   read the same `images: [...]` / `media: [...]` config. Where both land at
   the same spot, images come first. The page's lead banner (no `after`) is not
   rendered here; the parent puts it above the title via `topImages`.
+
+  Each paragraph is markdown (see richText.js): inline formatting inside a
+  <p>, or — when it starts with "- ", "1. " or "> " — a list / quote block.
 -->
 <template>
   <div class="prose-body" :class="{ 'prose-body--split': placed.split, 'prose-body--split-right': placed.split?.side === 'right' }">
     <PageImage v-if="placed.split" :image="placed.split" :eager="!hasTop" />
-    <div class="prose-flow">
+    <div class="prose-flow" @click="onRichClick">
       <template v-for="(para, i) in [...paragraphs, null]" :key="i">
         <PageImage v-for="(img, j) in placed.byIndex[i] || []" :key="`img-${i}-${j}`" :image="img" />
         <MediaEmbed v-for="(item, j) in placedMedia[i] || []" :key="`media-${i}-${j}`" :item="item" />
-        <p v-if="para !== null" :class="paraClass">{{ para }}</p>
+        <template v-if="para !== null">
+          <div v-if="isBlock(para)" class="prose-block" :class="paraClass" v-html="renderBlock(para)" />
+          <p v-else class="rich" :class="paraClass" v-html="renderInline(para)" />
+        </template>
       </template>
     </div>
   </div>
@@ -24,6 +30,8 @@ import PageImage from './PageImage.vue'
 import { placeImages } from './layouts.js'
 import MediaEmbed from '../media/MediaEmbed.vue'
 import { placeMedia } from '../media/media.js'
+import { renderInline, renderBlock, isBlock } from './richText.js'
+import { useRichLinks } from './useRichLinks.js'
 
 const props = defineProps({
   body: { type: [Array, String], default: () => [] },
@@ -38,6 +46,7 @@ const paragraphs = computed(() =>
 const placed = computed(() => placeImages(props.images, paragraphs.value.length))
 const placedMedia = computed(() => placeMedia(props.media, paragraphs.value.length))
 const hasTop = computed(() => placed.value.top.length > 0)
+const { onRichClick } = useRichLinks()
 </script>
 
 <style scoped>
