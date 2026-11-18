@@ -37,6 +37,11 @@ function highlight(state, silent) {
 }
 md.inline.ruler.before('emphasis', 'highlight', highlight)
 
+// A line break renders as a bare <br>. markdown-it adds a newline after it,
+// which headings with `white-space: pre-line` would show as a second break.
+md.renderer.rules.softbreak = () => '<br>'
+md.renderer.rules.hardbreak = () => '<br>'
+
 // External links open in a new tab; internal (/about, #contact) stay put
 // and are routed client-side by useRichLinks().
 const defaultLinkOpen = md.renderer.rules.link_open ||
