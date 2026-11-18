@@ -31,6 +31,9 @@
             'feat-row--cards': item.layout === 'cards',
             'feat-row--statement': item.layout === 'statement',
             'no-media': !item.layout && !item.image,
+            'has-media': !item.layout && item.image,
+            'media-even': item.mediaWidth === 'even',
+            'media-narrow': item.mediaWidth === 'narrow',
             'text-right': textSides[i] === 'right',
             'tone-dark is-dark': item.tone === 'dark' && !sectionDark,
           }"
@@ -79,7 +82,7 @@
           <!-- default layout: media beside the copy, sides alternating -->
           <template v-else>
             <div v-if="item.image" class="feat-row-media">
-              <img :src="asset(item.image)" :alt="item.alt || item.title" loading="lazy" />
+              <img :src="asset(item.image)" :alt="item.alt || plainText(item.title)" loading="lazy" :style="ratioStyle(item.imageRatio)" />
             </div>
             <div class="feat-row-copy">
               <p v-if="item.label" class="eyebrow">{{ item.label }}</p>
@@ -124,6 +127,7 @@
 import RichText from '../components/prose/RichText.vue'
 import { computed } from 'vue'
 import { asset } from '@/composables/useAssets.js'
+import { plainText } from '@/components/prose/richText.js'
 
 const props = defineProps({
   // grid (default) — icon cards in `columns` columns; items take icon,
@@ -131,7 +135,12 @@ const props = defineProps({
   // rows           — one feature per row. Each item is either:
   //   • default layout: `image` beside the copy, sides alternating; the copy
   //     takes label, title, text, points[] (strings, or { title, text }),
-  //     stats[] ({ value, label }), quote ({ text, cite }) and cta
+  //     stats[] ({ value, label }), quote ({ text, cite }) and cta.
+  //     Image width: `mediaWidth: 'wide'` (default — image a bit wider than
+  //     the copy) | 'even' (50/50) | 'narrow' (copy wider, ~3:4 — good for
+  //     long bios). Holds whichever side the text is on. `imageRatio`
+  //     changes the crop: '1', '4/5', '3/2' … or 'natural' for no crop
+  //     (default '4/3').
   //   • layout: 'cards': a full-width row with a split heading (label +
   //     title left, text right), its `points` laid out as cards
   //     ({ label, icon, title, text, points[] }), and an optional cta.
@@ -173,6 +182,9 @@ const sectionDark = computed(() => props.tone === 'dark')
 // An icon is an image if it looks like a path or URL; otherwise it's a glyph.
 const isImage = (s) => typeof s === 'string' && /\.(svg|png|jpe?g|webp|gif)$|^https?:|\//i.test(s)
 
+// imageRatio: '1' | '4/5' | '3/2' … or 'natural' (no crop)
+const ratioStyle = (r) => (!r ? null : r === 'natural' ? { aspectRatio: 'auto' } : { aspectRatio: String(r) })
+
 const paragraphs = (text) => (Array.isArray(text) ? text : text ? [text] : [])
 
 function cardLabel(item, pt, i) {
@@ -206,6 +218,12 @@ function cardLabel(item, pt, i) {
 .feat-row { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center; }
 .feat-row:not(.text-right) .feat-row-media { order: 2; }
 .feat-row.no-media { grid-template-columns: 1fr; max-width: 680px; }
+/* image rows: the column widths follow the image, whichever side it's on.
+   mediaWidth: 'wide' (default) | 'even' | 'narrow' */
+.feat-row.has-media { --media-w: 1.15fr; --copy-w: 1fr; grid-template-columns: var(--media-w) var(--copy-w); }
+.feat-row.has-media:not(.text-right) { grid-template-columns: var(--copy-w) var(--media-w); }
+.feat-row.media-even   { --media-w: 1fr; --copy-w: 1fr; }
+.feat-row.media-narrow { --media-w: 3fr; --copy-w: 4fr; }
 .feat-row-media img {
   width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
   border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-lg);
@@ -231,7 +249,7 @@ function cardLabel(item, pt, i) {
 .feat-quote cite { display: block; margin-top: 0.6rem; font-style: normal; font-size: 0.9rem; color: var(--text-muted); }
 
 @media (max-width: 800px) {
-  .feat-row { grid-template-columns: 1fr; }
+  .feat-row, .feat-row.has-media, .feat-row.has-media:not(.text-right) { grid-template-columns: 1fr; }
   .feat-row:not(.text-right) .feat-row-media { order: 0; }
 }
 
